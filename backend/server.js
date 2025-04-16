@@ -245,6 +245,57 @@ app.get('/check-session', (req, res) => {
     }
 });
 
+// ✅ Check if freelancer profile exists
+app.get('/freelancer/profile/:id', (req, res) => {
+    const { id } = req.params;
+
+    const sql = 'SELECT * FROM freelancer WHERE user_id = ? LIMIT 1';
+    db.query(sql, [id], (err, result) => {
+        if (err) {
+            console.error('Error checking freelancer profile:', err);
+            return res.status(500).json({ success: false, message: 'Server error' });
+        }
+
+        if (result.length === 0) {
+            return res.status(200).json({ profileExists: false });
+        } else {
+            return res.status(200).json({ profileExists: true });
+        }
+    });
+});
+
+// ✅ Complete Freelancer Profile
+app.post('/freelancer/:id/complete-profile', (req, res) => {
+    const { id } = req.params;
+    const { title, bio, skills, resume } = req.body;
+
+    if (!title || !bio || !skills || !resume) {
+        return res.status(400).json({ success: false, message: 'All fields are required' });
+    }
+
+    // Handle file upload (resume)
+    const resumePath = `uploads/resumes/${resume.name}`;
+
+    // Insert profile data into the freelancer table
+    const sql = `
+        INSERT INTO freelancer (user_id, title, bio, skills, resume_path, created_at)
+        VALUES (?, ?, ?, ?, ?, NOW())
+    `;
+    const values = [id, title, bio, skills, resumePath];
+
+    db.query(sql, values, (err) => {
+        if (err) {
+            console.error('Error completing profile:', err);
+            return res.status(500).json({ success: false, message: 'Error completing profile' });
+        }
+
+        // Save the resume file to the server (you need to implement file upload handling logic)
+        // Resumable file storage logic goes here
+
+        res.json({ success: true, message: 'Profile completed successfully' });
+    });
+});
+
 
 // ✅ Start server
 app.listen(PORT, () => {
