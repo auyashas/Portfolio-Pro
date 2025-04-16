@@ -15,24 +15,24 @@ import { useSession } from './hooks/useSession';
 // ✅ Protected Route Component
 const ProtectedRoute = ({ children, role }) => {
     const { user, loading } = useSession();
-    const location = useLocation();
+    // const location = useLocation();
 
+    // If session is loading, show loading spinner
     if (loading) return <div>Loading...</div>;
 
+    // If no user, redirect to login page
     if (!user) return <Navigate to="/login" replace />;
 
-    const pathSegments = location.pathname.split('/');
-    const urlId = pathSegments[pathSegments.length - 1];
-
-    if (role === "admin" && user.role !== "admin") {
+    // Redirect if user has an incorrect role for the page
+    if (role === 'admin' && user.role !== 'admin') {
         return <Navigate to="/" replace />;
     }
 
-    if (role === "freelancer" && user.role === "freelancer" && user.id !== urlId) {
+    if (role === 'freelancer' && user.role !== 'freelancer') {
         return <Navigate to={`/freelancer/${user.id}`} replace />;
     }
 
-    if (role === "client" && user.role === "client" && user.id !== urlId) {
+    if (role === 'client' && user.role !== 'client') {
         return <Navigate to={`/client/${user.id}`} replace />;
     }
 
@@ -42,7 +42,8 @@ const ProtectedRoute = ({ children, role }) => {
 // ✅ Layout wrapper to hide Navbar on auth pages
 const Layout = ({ children }) => {
     const location = useLocation();
-    const hideNavbarRoutes = ["/login", "/signup", "/register"];
+    const hideNavbarRoutes = ['/login', '/signup', '/register', '/terms'];
+    
     return (
         <>
             {!hideNavbarRoutes.includes(location.pathname) && <Navbar />}
@@ -57,6 +58,7 @@ function App() {
         <Router>
             <Layout>
                 <Routes>
+                    {/* Public Routes */}
                     <Route path="/" element={<Home />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />

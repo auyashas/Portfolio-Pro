@@ -1,15 +1,17 @@
 import React from "react";
 import { useParams } from "react-router-dom";
+import Hero from '../components/Hero'; // Corrected import for Hero
+import Footer from '../components/Footer';
 import "../styles/HomeStyles.css";
 
 const ClientHome = () => {
-    const { id } = useParams();
+    const { id } = useParams();  // Extracts the id parameter from the URL
 
     return (
-        <div className="user-home">
-            <h1>Welcome, Client {id}!</h1>
-            <p>You can view freelancers and post job requests.</p>
-        </div>
+        <>
+            <Hero />
+            <Footer />
+        </>
     );
 };
 

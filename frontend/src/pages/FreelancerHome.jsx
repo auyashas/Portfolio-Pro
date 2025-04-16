@@ -11,10 +11,6 @@ const FreelancerHome = () => {
     return (
         <>
             <Hero />
-            <div className="freelancer-home">
-                <h1>Welcome Freelancer {id}</h1>
-                {/* Display freelancer's id or any other information here */}
-            </div>
             <Footer />
         </>
     );

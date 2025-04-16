@@ -1,3 +1,4 @@
+/* Navbar Styles */
 .nav {
     display: flex;
     align-items: center;
@@ -10,6 +11,7 @@
     gap: 34px;
     justify-content: space-around;
     box-shadow: 0px 5px 10px 1px rgba(0, 0, 0, 0.05);
+    position: relative;
 }
 
 .logo {
@@ -70,7 +72,7 @@
     position: relative;
     cursor: pointer;
     margin-right: 30px;
-    /* height: 100px; */
+    transition: all 0.3s ease;
 }
 
 .three-dots {
@@ -82,17 +84,24 @@
     position: absolute;
     top: 40px;
     right: 0;
-    background-color: white;
+    background-color: #fff;
     border: 1px solid #ccc;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
     border-radius: 6px;
     min-width: 180px;
     z-index: 999;
-    display: flex;
+    display: none;
     flex-direction: column;
     padding: 10px 0;
-    height: 100px;
-    width: 80px;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.dropdown-menu.show {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .dropdown-menu a,
@@ -103,18 +112,16 @@
     background: none;
     cursor: pointer;
     font-size: 14px;
-    color: red;
+    color: #333;
     text-decoration: none;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .dropdown-menu a:hover,
 .dropdown-menu button:hover {
     background-color: #f0f0f0;
+    color: #1e88e5;
     border-radius: 4px;
-}
-
-.nav-user-menu{
-
 }
 
 /* 📱 Responsive Styles */

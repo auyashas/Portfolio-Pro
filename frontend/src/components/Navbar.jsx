@@ -76,10 +76,11 @@ export default function Navbar() {
                     <div className="nav-user-menu" ref={dropdownRef}>
                         <MoreVertical size={26} onClick={() => setShowDropdown(!showDropdown)} className="three-dots" />
                         {showDropdown && (
-                            <div className="dropdown-menu">
+                            <div className={`dropdown-menu ${showDropdown ? "show" : ""}`}>
                                 {renderDropdownOptions()}
                             </div>
                         )}
+
                     </div>
                 ) : (
                     <button className="nav-btn" onClick={() => navigate("/login")}>Login</button>

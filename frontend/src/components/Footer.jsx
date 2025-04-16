@@ -1,11 +1,12 @@
 import { FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn } from 'react-icons/fa';
-import './Footer.css'
+import './Footer.css';
+import characterLogo from '../assets/character_logo.png';  // Import the image
 
 const Footer = () => {
     return (
         <footer className="footer">
             <div className="footer-left">
-                <img src="src/assets/character_logo.png" alt="Portfolio-Pro Logo" className="footer-logo" />
+                <img src={characterLogo} alt="Portfolio-Pro Logo" className="footer-logo" /> {/* Use the imported image */}
                 <span className="footer-divider">|</span>
                 <span className="footer-text">© 2025 Portfolio-Pro — <a href="mailto:portfolio.pro.team@gmail.com">portfolio.pro.team@gmail.com</a></span>
             </div>
