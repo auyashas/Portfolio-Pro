@@ -1,0 +1,162 @@
+.nav {
+    display: flex;
+    align-items: center;
+    border-radius: 48px;
+    width: 90vw;
+    height: 80px;
+    background-color: white;
+    margin-top: 3%;
+    margin-left: 5%;
+    gap: 34px;
+    justify-content: space-around;
+    box-shadow: 0px 5px 10px 1px rgba(0, 0, 0, 0.05);
+}
+
+.logo {
+    margin-left: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.logo > img {
+    width: 323px;
+    height: 50px;
+    object-fit: cover;
+    transform: scale(0.9);
+}
+
+.nav-options {
+    list-style: none;
+    align-items: center;
+    display: flex;
+    gap: 100px;
+    font-size: 22px;
+    margin-right: 30px;
+}
+
+.nav-options > a {
+    text-decoration: none;
+    color: #8d8d8d;
+    transition: 0.3s ease;
+}
+
+.nav-options > a:hover {
+    color: rgb(21, 185, 250);
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.nav-btn {
+    height: 46px;
+    width: 106px;
+    border-radius: 21px;
+    font-size: 21px;
+    background: #1e88e5;
+    color: white;
+    border: none;
+    margin-right: 30px;
+}
+
+.nav-btn:hover {
+    background-color: #1e88e5b7;
+}
+
+.nav-btn:active {
+    background-color: #1b79cc;
+}
+
+/* 🔽 Dropdown Styles */
+.nav-user-menu {
+    position: relative;
+    cursor: pointer;
+    margin-right: 30px;
+    /* height: 100px; */
+}
+
+.three-dots {
+    color: #333;
+    cursor: pointer;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    background-color: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    border-radius: 6px;
+    min-width: 180px;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 0;
+    height: 100px;
+    width: 80px;
+}
+
+.dropdown-menu a,
+.dropdown-menu button {
+    padding: 10px 15px;
+    text-align: left;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: red;
+    text-decoration: none;
+}
+
+.dropdown-menu a:hover,
+.dropdown-menu button:hover {
+    background-color: #f0f0f0;
+    border-radius: 4px;
+}
+
+.nav-user-menu{
+
+}
+
+/* 📱 Responsive Styles */
+@media screen and (max-width: 455px) {
+    .nav {
+        height: 45px;
+        width: 95vw;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .nav-options {
+        gap: 8px;
+        font-size: 10px;
+        margin-right: 8px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .logo {
+        margin-left: 7px;
+    }
+
+    .logo > img {
+        width: 123px;
+        height: 30px;
+    }
+
+    .nav-btn {
+        height: 26px;
+        width: 76px;
+        font-size: 11px;
+    }
+
+    .dropdown-menu {
+        right: -10px;
+        min-width: 140px;
+    }
+
+    .dropdown-menu a,
+    .dropdown-menu button {
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+}

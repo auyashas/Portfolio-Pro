@@ -1,0 +1,186 @@
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
+import '../styles/Auth.css';
+import defaultProfilePic from '../assets/user.png';
+import editIcon from '../assets/edit_icon.png';
+
+const Register = () => {
+    useEffect(() => {
+        document.title = "Portfolio-Pro | Registration";
+    }, []);
+
+    const navigate = useNavigate();
+
+    const storedEmail = localStorage.getItem('signupEmail') || '';
+    const storedPassword = localStorage.getItem('signupPassword') || '';
+
+    const [formData, setFormData] = useState({
+        profilePicture: null,
+        name: '',
+        login_mail: storedEmail,
+        password: storedPassword,
+        cont_mail: '',
+        cont_phone: '',
+        bio: '',
+        portfolio_link: '',
+        skill: '',
+        experience: '',
+        resume: null,
+        city: '',
+        country: '',
+        termsAccepted: false
+    });
+
+    const [profilePreview, setProfilePreview] = useState(defaultProfilePic);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleChange = (e) => {
+        const { name, value, type, checked, files } = e.target;
+
+        if (name === 'profilePicture') {
+            const file = files[0];
+            if (file) {
+                setProfilePreview(URL.createObjectURL(file));
+                setFormData(prev => ({ ...prev, profilePicture: file }));
+            } else {
+                setProfilePreview(defaultProfilePic);
+                setFormData(prev => ({ ...prev, profilePicture: null }));
+            }
+            return;
+        }
+
+        if (name === 'resume') {
+            setFormData(prev => ({ ...prev, resume: files[0] }));
+            return;
+        }
+
+        if (name === 'bio' && value.length > 350) {
+            alert("Bio cannot exceed 350 characters.");
+            return;
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (!formData.termsAccepted) {
+            alert('Please accept the Terms & Conditions.');
+            return;
+        }
+
+        setIsLoading(true);
+
+        const formDataToSend = new FormData();
+        formDataToSend.append('profilePicture', formData.profilePicture || 'default-user.png');
+        formDataToSend.append('resume', formData.resume);
+        Object.keys(formData).forEach(key => {
+            if (key !== 'profilePicture' && key !== 'resume' && key !== 'termsAccepted') {
+                formDataToSend.append(key, formData[key]);
+            }
+        });
+
+        try {
+            const response = await axios.post('http://localhost:3000/register', formDataToSend, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            if (response.status === 200) {
+                alert('Your registration was successful, please await approval.');
+                navigate('/');
+            }
+        } catch (error) {
+            console.error('Registration Error:', error);
+            alert('Registration failed. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <div className="auth-box">
+            <div className="auth-header">
+                <img src="src/assets/character_logo.png" alt="Portfolio Logo" className="logo" />
+                <header>Freelancer Registration</header>
+            </div>
+
+            <form onSubmit={handleSubmit}>
+                <div className="profile-container">
+                    <img src={profilePreview} alt="Profile Preview" className="profile-preview" />
+                    <label htmlFor="profile-upload" className="edit-icon">
+                        <img src={editIcon} alt="Edit Icon" />
+                    </label>
+                    <input
+                        type="file"
+                        id="profile-upload"
+                        className="hidden-input"
+                        name="profilePicture"
+                        accept="image/*"
+                        onChange={handleChange}
+                    />
+                </div>
+
+                <div className="input-box">
+                    <input type="text" name="name" placeholder="Full Name*" value={formData.name} onChange={handleChange} className="input-field" required />
+                    <input type="email" name="cont_mail" placeholder="Email*" value={formData.cont_mail} onChange={handleChange} className="input-field" required />
+                    <input type="tel" name="cont_phone" placeholder="Phone Number*" value={formData.cont_phone} onChange={handleChange} className="input-field" required />
+                    <textarea name="bio" placeholder="Bio (max 350 characters)*" rows="3" value={formData.bio} onChange={handleChange} className="input-field" required></textarea>
+                    <input type="text" name="portfolio_link" placeholder="Portfolio Link" value={formData.portfolio_link} onChange={handleChange} className="input-field" />
+
+                    <select name="skill" value={formData.skill} onChange={handleChange} className="input-field" required>
+                        <option value="" disabled>Select a Skill*</option>
+                        <option value="Web Development">Web Development</option>
+                        <option value="Mobile App Development">Mobile App Development</option>
+                        <option value="UI/UX Design">UI/UX Design</option>
+                        <option value="Data Analysis">Data Analysis</option>
+                        <option value="Digital Marketing">Digital Marketing</option>
+                        <option value="Graphic Design">Graphic Design</option>
+                        <option value="Content Writing">Content Writing</option>
+                        <option value="Video Editing">Video Editing</option>
+                        <option value="SEO Optimization">SEO Optimization</option>
+                        <option value="Cybersecurity">Cybersecurity</option>
+                        <option value="Cloud Computing">Cloud Computing</option>
+                        <option value="DevOps">DevOps</option>
+                        <option value="Game Development">Game Development</option>
+                        <option value="Software Testing">Software Testing</option>
+                        <option value="IT Support">IT Support</option>
+                    </select>
+
+                    <input type="text" name="experience" placeholder="Experience (in years)" value={formData.experience} onChange={handleChange} className="input-field" />
+
+                    <div className="resume-container">
+                        <label htmlFor="resume-upload" className="input-field resume-label">Upload Resume (PDF/DOCX)*</label>
+                        <input type="file" id="resume-upload" name="resume" accept=".pdf,.docx" onChange={handleChange} className="file-input" required />
+                        {formData.resume && <p className="file-name">Selected File: {formData.resume.name}</p>}
+                    </div>
+
+                    <input type="text" name="city" placeholder="City*" value={formData.city} onChange={handleChange} className="input-field" required />
+                    <input type="text" name="country" placeholder="Country*" value={formData.country} onChange={handleChange} className="input-field" required />
+                </div>
+
+                <label className="terms-container">
+                    <div className="terms-link">
+                        <input type="checkbox" name="termsAccepted" checked={formData.termsAccepted} onChange={handleChange} />
+                        <p>By signing in, you agree to our <Link to="/terms">Terms & Conditions</Link>.</p>
+                    </div>
+                </label>
+
+                <div className="input-submit load">
+                    <button className="submit-btn" disabled={isLoading}>
+                        {isLoading ? "Registering..." : "Register"}
+                    </button>
+                    {isLoading && <div className="spinner"></div>}
+                </div>
+            </form>
+        </div>
+    );
+};
+
+export default Register;
