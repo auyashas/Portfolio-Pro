@@ -10,6 +10,7 @@ import Profile from './pages/Profile';
 import FreelancerHome from './pages/FreelancerHome';
 import ClientHome from './pages/ClientHome';
 import AdminHome from './pages/AdminHome';
+import FreelancerApplication from './pages/FreelancerApplication';
 import ProtectedRoute from './ProtectedRoute'; // If it's in a separate file
 
 function App() {
@@ -58,6 +59,10 @@ function App() {
                                 <ClientHome />
                             </ProtectedRoute>
                         }
+                    />
+                    <Route
+                        path="/freelancer/:id/freelancer-application"
+                        element={<FreelancerApplication />}
                     />
                 </Route>
             </Routes>

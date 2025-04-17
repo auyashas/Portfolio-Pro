@@ -4,6 +4,9 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const mysql = require('mysql2');
 const bcrypt = require('bcrypt');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
@@ -296,6 +299,106 @@ app.post('/freelancer/:id/complete-profile', (req, res) => {
     });
 });
 
+app.get('/freelancer/check/:user_id', (req, res) => {
+    const userId = req.params.user_id;
+
+    const sql = 'SELECT * FROM freelancer WHERE user_id = ?';
+    db.query(sql, [userId], (err, results) => {
+        if (err) {
+            console.error('Error checking freelancer profile:', err);
+            return res.status(500).json({ message: 'Server error' });
+        }
+
+        if (results.length === 0) {
+            return res.json({ exists: false });
+        }
+
+        res.json({ exists: true, data: results[0] });
+    });
+});
+
+// Setup for file storage
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadPath = 'uploads/';
+        // Check if the upload folder exists, if not, create it
+        if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath);
+        }
+
+        if (file.fieldname === 'profilePicture') {
+            const profilePicPath = 'uploads/profile_pics';
+            // Check if the profile_pics folder exists, if not, create it
+            if (!fs.existsSync(profilePicPath)) {
+                fs.mkdirSync(profilePicPath);
+            }
+            cb(null, profilePicPath); // Path to save profile pictures
+        } else if (file.fieldname === 'resume') {
+            const resumePath = 'uploads/resumes';
+            // Check if the resumes folder exists, if not, create it
+            if (!fs.existsSync(resumePath)) {
+                fs.mkdirSync(resumePath);
+            }
+            cb(null, resumePath); // Path to save resumes
+        }
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + path.extname(file.originalname)); // Save with a unique name
+    }
+});
+
+// Initialize multer without file filter (allow all file types)
+const upload = multer({ storage: storage });
+
+app.post('/freelancer/submit', upload.fields([
+    { name: 'profilePicture', maxCount: 1 },
+    { name: 'resume', maxCount: 1 }
+]), (req, res) => {
+    const { user_id, title, bio, skills, social_links } = req.body;
+
+    // Validate mandatory fields
+    if (!user_id || !title || !bio || !skills) {
+        return res.status(400).json({ message: 'Please fill all required fields: user_id, title, bio, skills.' });
+    }
+
+    // Default profile picture if no image is uploaded
+    let profilePicPath = 'uploads/default-user.png';
+
+    // If the profile picture is provided, save it and update the path
+    if (req.files['profilePicture']) {
+        const fileExtension = path.extname(req.files['profilePicture'][0].originalname);
+        const newFileName = `${Date.now()}-${req.files['profilePicture'][0].originalname}`;
+        const newFilePath = path.join('uploads', 'profile_pics', newFileName);
+
+        // Move the file to the correct location
+        fs.renameSync(req.files['profilePicture'][0].path, newFilePath);
+
+        profilePicPath = newFilePath;  // Update the profile picture path
+    }
+
+    // Resume handling
+    let resumePath = null;
+    if (req.files['resume']) {
+        resumePath = path.join('uploads', 'resumes', req.files['resume'][0].filename);
+        fs.renameSync(req.files['resume'][0].path, resumePath); // Move the resume to the correct location
+    }
+    
+
+    // SQL query to insert freelancer data
+    const sql = `
+        INSERT INTO freelancer (user_id, title, bio, skills, resume_path, profile_pic_path, social_links, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    db.query(sql, [user_id, title, bio, skills, resumePath, profilePicPath, social_links, 'Pending'], (err, result) => {
+        if (err) {
+            console.error('Error inserting freelancer profile:', err);
+            return res.status(500).json({ message: 'Server error' });
+        }
+
+        res.json({ message: 'Freelancer profile submitted with status: Pending' });
+    });
+});
 
 // ✅ Start server
 app.listen(PORT, () => {

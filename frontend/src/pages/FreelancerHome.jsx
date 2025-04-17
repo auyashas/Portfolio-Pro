@@ -1,44 +1,35 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import Hero from '../components/Hero'; 
+import { useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import Hero from '../components/Hero'; // Corrected import for Hero
 import Footer from '../components/Footer';
-import "../styles/HomeStyles.css";
+import axios from 'axios';
 
 const FreelancerHome = () => {
-    const { id } = useParams();  // Extracts the id parameter from the URL
+    const { id } = useParams(); // This is user_id
     const navigate = useNavigate();
-    const [profileExists, setProfileExists] = useState(null);
 
     useEffect(() => {
-        // Fetch profile completion status
         const checkProfile = async () => {
             try {
-                const response = await fetch(`http://localhost:3000/freelancer/profile/${id}`);
-                const data = await response.json();
-
-                if (data.profileExists === false) {
-                    // Redirect to profile completion page
-                    navigate(`/freelancer/${id}/application`);
-                } else {
-                    setProfileExists(true);
+                const response = await axios.get(`http://localhost:3000/freelancer/check/${id}`);
+                if (!response.data.exists) {
+                    alert("Please complete your profile to continue.");
+                    navigate(`/freelancer/${id}/freelancer-application`);
                 }
+                // You can set freelancer data in state here if needed
             } catch (error) {
-                console.error("Error checking profile:", error);
+                console.error("Error checking freelancer profile:", error);
             }
         };
 
         checkProfile();
     }, [id, navigate]);
 
-    if (profileExists === null) {
-        return <div>Loading...</div>;  // Wait for the profile check
-    }
-
     return (
-        <>
+        <div>
             <Hero />
             <Footer />
-        </>
+        </div>
     );
 };
 
