@@ -17,32 +17,32 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError("");  // Reset error message
+        setError(""); // Reset error message
 
-        // Validate input fields
         if (!email || !password) {
             setError("Please fill in both fields.");
             return;
         }
 
         try {
-            // Make POST request to login API
             const response = await axios.post(
-                "http://localhost:3000/login", 
+                "http://localhost:3000/login",
                 { email, password },
                 { withCredentials: true }
             );
 
             const user = response.data.user;
 
-            // Check if the response structure is correct
             if (user && user.id && user.role) {
-                navigate(`/${user.role}/${user.id}`);  // Redirect based on user role and ID
+                if (user.role === "admin") {
+                    navigate("/admin"); // ✅ Static route for admin
+                } else {
+                    navigate(`/${user.role}/${user.id}`); // ✅ Dynamic for freelancer/client
+                }
             } else {
                 setError("Invalid user data received.");
             }
         } catch (err) {
-            // Handle errors based on server response
             console.error("Login error:", err);
             setError(err.response?.data?.message || "Login failed. Please try again.");
         }

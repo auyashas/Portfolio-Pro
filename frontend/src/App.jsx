@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import Navbar from './components/Navbar';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Layout from './Layout'; // 👈 Import the Layout you just created
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Terms from './pages/Terms';
@@ -10,65 +10,25 @@ import Profile from './pages/Profile';
 import FreelancerHome from './pages/FreelancerHome';
 import ClientHome from './pages/ClientHome';
 import AdminHome from './pages/AdminHome';
-import { useSession } from './hooks/useSession';
+import ProtectedRoute from './ProtectedRoute'; // If it's in a separate file
 
-// ✅ Protected Route Component
-const ProtectedRoute = ({ children, role }) => {
-    const { user, loading } = useSession();
-    // const location = useLocation();
-
-    // If session is loading, show loading spinner
-    if (loading) return <div>Loading...</div>;
-
-    // If no user, redirect to login page
-    if (!user) return <Navigate to="/login" replace />;
-
-    // Redirect if user has an incorrect role for the page
-    if (role === 'admin' && user.role !== 'admin') {
-        return <Navigate to="/" replace />;
-    }
-
-    if (role === 'freelancer' && user.role !== 'freelancer') {
-        return <Navigate to={`/freelancer/${user.id}`} replace />;
-    }
-
-    if (role === 'client' && user.role !== 'client') {
-        return <Navigate to={`/client/${user.id}`} replace />;
-    }
-
-    return children;
-};
-
-// ✅ Layout wrapper to hide Navbar on auth pages
-const Layout = ({ children }) => {
-    const location = useLocation();
-    const hideNavbarRoutes = ['/login', '/signup', '/register', '/terms'];
-    
-    return (
-        <>
-            {!hideNavbarRoutes.includes(location.pathname) && <Navbar />}
-            {children}
-        </>
-    );
-};
-
-// ✅ Main App Component
 function App() {
     return (
         <Router>
-            <Layout>
-                <Routes>
+            <Routes>
+                {/* All Routes wrapped in the Layout */}
+                <Route path="/" element={<Layout />}>
                     {/* Public Routes */}
-                    <Route path="/" element={<Home />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<Signup />} />
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/about" element={<About />} />
+                    <Route index element={<Home />} />
+                    <Route path="login" element={<Login />} />
+                    <Route path="signup" element={<Signup />} />
+                    <Route path="terms" element={<Terms />} />
+                    <Route path="register" element={<Register />} />
+                    <Route path="about" element={<About />} />
 
                     {/* Protected Routes */}
                     <Route
-                        path="/profile"
+                        path="profile"
                         element={
                             <ProtectedRoute role="freelancer">
                                 <Profile />
@@ -76,7 +36,7 @@ function App() {
                         }
                     />
                     <Route
-                        path="/admin"
+                        path="admin"
                         element={
                             <ProtectedRoute role="admin">
                                 <AdminHome />
@@ -84,7 +44,7 @@ function App() {
                         }
                     />
                     <Route
-                        path="/freelancer/:id"
+                        path="freelancer/:id"
                         element={
                             <ProtectedRoute role="freelancer">
                                 <FreelancerHome />
@@ -92,15 +52,15 @@ function App() {
                         }
                     />
                     <Route
-                        path="/client/:id"
+                        path="client/:id"
                         element={
                             <ProtectedRoute role="client">
                                 <ClientHome />
                             </ProtectedRoute>
                         }
                     />
-                </Routes>
-            </Layout>
+                </Route>
+            </Routes>
         </Router>
     );
 }

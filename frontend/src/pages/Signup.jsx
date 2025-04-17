@@ -18,6 +18,7 @@ const Signup = () => {
     const [userType, setUserType] = useState('freelancer');
     const [timer, setTimer] = useState(60);
     const [isTimerRunning, setIsTimerRunning] = useState(false);
+    const [isLoading, setIsLoading] = useState(false); // New state for loading buffer
 
     const navigate = useNavigate();
 
@@ -46,6 +47,7 @@ const Signup = () => {
     const sendOtp = async () => {
         if (!email) return alert("Enter your email first.");
         try {
+            setIsLoading(true); // Start loading buffer
             const response = await axios.post("http://localhost:3000/send-otp", { email });
             if (response.data.success) {
                 setIsOtpSent(true);
@@ -59,6 +61,8 @@ const Signup = () => {
         } catch (err) {
             console.error(err);
             alert("Error sending OTP.");
+        } finally {
+            setIsLoading(false); // Stop loading buffer
         }
     };
 
@@ -176,6 +180,14 @@ const Signup = () => {
                     <p className="resend-link" onClick={sendOtp}>
                         Get OTP
                     </p>
+                )}
+
+                {/* Show loading buffer while sending OTP */}
+                {isLoading && (
+                    <div className="loading-buffer">
+                        <span className='loading-text'>Sending OTP</span>
+                        <div className="spinner"></div>
+                    </div>
                 )}
 
                 <div className="input-box password-box">

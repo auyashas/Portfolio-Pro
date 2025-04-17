@@ -49,7 +49,7 @@ a:hover {
     margin-bottom: 40px;
 }
 
-.role-select{
+.role-select {
     display: flex;
     justify-content: center;
     color: #222222a7;
@@ -59,10 +59,10 @@ a:hover {
 }
 
 .radio-btn {
-    transform: scale(1.5); 
+    transform: scale(1.5);
     margin-right: 8px;
-    accent-color: #1b79cc; 
-  }
+    accent-color: #1b79cc;
+}
 
 .input-box .input-field,
 .input-field {
@@ -87,7 +87,7 @@ a:hover {
     width: 105%;
 }
 
-.input-submit .submit-btn{
+.input-submit .submit-btn {
     background: #1b79cc;
     border: none;
     border-radius: 30px;
@@ -104,6 +104,7 @@ a:hover {
     cursor: not-allowed;
     color: #fff;
 }
+
 .logo {
     height: 100px;
     object-fit: cover;
@@ -114,6 +115,39 @@ a:hover {
 .disabled {
     color: gray;
     cursor: not-allowed;
+}
+
+.loading-buffer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+    gap: 10px;
+}
+
+.loading-text {
+    color: rgb(12, 183, 250);
+    font-weight: 400;
+    font-size: 20px;
+}
+
+.spinner {
+    border: 4px solid transparent;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 
@@ -142,7 +176,8 @@ section {
 }
 
 section a,
-.sign-up-link a,.resend-link {
+.sign-up-link a,
+.resend-link {
     color: rgb(12, 183, 250);
     font-weight: 600;
     font-size: 20px;
@@ -150,7 +185,7 @@ section a,
     transition: 0.3s ease;
 }
 
-.resend-link{
+.resend-link {
     font-size: 18px;
     display: flex;
     justify-content: flex-end;
@@ -163,7 +198,8 @@ section a,
     align-items: center;
 }
 
-.sign-up-link:hover a, .resend-link:hover{
+.sign-up-link:hover a,
+.resend-link:hover {
     text-decoration: underline;
 }
 
@@ -172,7 +208,8 @@ section a,
     text-align: center;
 }
 
-.submit-btn:hover, .verify-btn:hover {
+.submit-btn:hover,
+.verify-btn:hover {
     background-color: #1e88e5b7;
 }
 
@@ -412,19 +449,20 @@ textarea.input-field {
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
- .load{
+
+.load {
     display: flex;
     gap: 23px;
     align-items: center;
- }
+}
 
-.otp-box{
+.otp-box {
     display: flex;
     gap: 5px;
     align-items: center;
 }
- 
-.verify-btn{
+
+.verify-btn {
     background: #1b79cc;
     border: none;
     border-radius: 30px;
@@ -438,8 +476,13 @@ textarea.input-field {
 
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 

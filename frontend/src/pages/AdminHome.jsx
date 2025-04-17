@@ -1,13 +1,15 @@
-import React from "react";
-import "../styles/HomeStyles.css";
+    import React from "react";
+    import Hero from '../components/Hero'; // Corrected import for Hero
+    import Footer from '../components/Footer';
+    import "../styles/HomeStyles.css";
 
-const AdminHome = () => {
-    return (
-        <div className="user-home">
-            <h1>Welcome, Admin!</h1>
-            <p>Manage freelancer applications and view active freelancers.</p>
-        </div>
-    );
-};
+    const AdminHome = () => {
+        return (
+            <>
+            <Hero />
+            <Footer />
+            </>
+        );
+    };
 
-export default AdminHome;
+    export default AdminHome;
