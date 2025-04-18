@@ -17,7 +17,8 @@ app.use(cookieParser());
 
 app.use(cors({
     origin: 'http://localhost:5173',
-    credentials: true
+    credentials: true,
+    exposedHeaders: ['Content-Disposition'] 
 }));
 
 const generateOTP = () => Math.floor(1000 + Math.random() * 9000).toString();
@@ -308,7 +309,9 @@ app.post('/freelancer/submit', upload.fields([
     { name: 'profilePicture', maxCount: 1 },
     { name: 'resume', maxCount: 1 }
 ]), async (req, res) => {
-    const { user_id, title, bio, skills, social_links } = req.body;
+    const { user_id, title, bio, skills,experience, social_links } = req.body;
+    console.log(experience)
+    const experienceValue = experience === '' ? 0 : experience;
 
     // Validate required fields
     if (!user_id || !title || !bio || !skills) {
@@ -341,13 +344,13 @@ app.post('/freelancer/submit', upload.fields([
 
     // Prepare SQL query
     const sql = `
-        INSERT INTO freelancer (user_id, title, bio, skills, resume_path, profile_pic_path, social_links, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending')
+        INSERT INTO freelancer (user_id, title, bio, skills, experience, resume_path, profile_pic_path, social_links, status)
+        VALUES (?, ?, ?, ?, ?, ?,?, ?, 'Pending')
     `;
 
     try {
         const connection = await db.getConnection();
-        await connection.query(sql, [user_id, title, bio, skills, resumePath, profilePicPath, social_links]);
+        await connection.query(sql, [user_id, title, bio, skills, experienceValue, resumePath, profilePicPath, social_links]);
         console.log('Profile submitted successfully!');
         connection.release();
         return res.status(200).json({ message: 'Profile submitted successfully with status: Pending' });
@@ -403,60 +406,61 @@ app.post('/admin/application/:id', async (req, res) => {
     }
 
     const newStatus = status === 'approve' ? 'Approved' : 'Rejected';
-    const query = status === 'approve' 
-        ? "UPDATE freelancer SET status = ? WHERE id = ?"
-        : "DELETE FROM freelancer WHERE id = ?";
 
     try {
+        // Fetch user info before making DB changes
+        const [userResult] = await db.query(
+            "SELECT u.email, u.first_name, u.last_name FROM users u JOIN freelancer f ON u.id = f.user_id WHERE f.id = ?",
+            [id]
+        );
+
+        if (userResult.length === 0) {
+            return res.status(404).json({ message: "Freelancer not found" });
+        }
+
+        const { email, first_name, last_name } = userResult[0];
+
+        // Update or delete from freelancer table
         if (status === 'approve') {
-            await db.query(query, [newStatus, id]);
+            await db.query("UPDATE freelancer SET status = ? WHERE id = ?", [newStatus, id]);
         } else {
-            await db.query(query, [id]);
+            await db.query("DELETE FROM freelancer WHERE id = ?", [id]);
         }
 
-        // Fetch the freelancer's email from the users table for notifications
-        const [userResult] = await db.query("SELECT email, first_name, last_name FROM users WHERE id = (SELECT user_id FROM freelancer WHERE id = ?)", [id]);
-        
-        if (userResult.length > 0) {
-            const { email, first_name, last_name } = userResult[0];
-
-            // Send email notification
-            let transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS
-                }
-            });
-
-            const mailOptions = status === 'approve' 
-            ?{
-                from: process.env.EMAIL_USER,
-                to: email,
-                subject: `Your Freelancer Application has been Approved`,
-                text: `Dear ${first_name} ${last_name},\n\nCongratulations! Your freelancer application has been approved.Your profile will we visible in our site\n\nRegards,\nPortfolio Pro Team`
-            }:{
-                from: process.env.EMAIL_USER,
-                to: email,
-                subject: `Your Freelancer Application has been Rejected`,
-                text: `Dear ${first_name} ${last_name},\n\nYour freelancer application has been Rejected.Login and reapply with valid documents and info.\n\nRegards,\nPortfolio Pro Team`
-            };
-
-                transporter.sendMail(mailOptions, (error, info) => {
-                    if (error) {
-                        console.error('Email sending failed:', error);
-                    } else {
-                        console.log('Email sent: ' + info.response);
-                    }
-                });
+        // Setup Nodemailer
+        let transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
             }
+        });
 
-            res.json({ message: `Freelancer ${newStatus}` });
-        } catch (error) {
-            console.error("Error processing application:", error);
-            res.status(500).json({ message: 'Server error' });
-        }
-    });
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: `Your Freelancer Application has been ${newStatus}`,
+            text: status === 'approve'
+                ? `Dear ${first_name} ${last_name},\n\nCongratulations! Your freelancer application has been approved. Your profile will be visible on our site.\n\nRegards,\nPortfolio Pro Team`
+                : `Dear ${first_name} ${last_name},\n\nYour freelancer application has been rejected. Please log in and reapply with valid documents and info.\n\nRegards,\nPortfolio Pro Team`
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error('Email sending failed:', error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
+
+        res.json({ message: `Freelancer ${newStatus}` });
+
+    } catch (error) {
+        console.error("Error processing application:", error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 
 
 app.get('/download-resume/:fileName', (req, res) => {

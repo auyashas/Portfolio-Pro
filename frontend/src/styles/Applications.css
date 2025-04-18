@@ -6,12 +6,13 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
+    height: 80vh;
     background-color: #f4f4f4;
 }
 
 h2 {
     text-align: center;
-    color: #333;
+    color: #2196F3;
     font-size: 28px;
     margin-bottom: 20px;
 }
@@ -32,7 +33,7 @@ h2 {
 }
 
 .applications-table th {
-    background-color: #4CAF50;
+    background-color: #2196F3;
     color: white;
     font-weight: bold;
 }
@@ -85,4 +86,9 @@ p {
     text-align: center;
     font-size: 18px;
     color: #333;
+}
+.processing-text {
+    color: #555;
+    font-weight: bold;
+    margin-bottom: 10px;
 }

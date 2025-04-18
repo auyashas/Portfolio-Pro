@@ -1,97 +1,128 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import '../styles/Admin.css';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import axios from "axios";
+import "../styles/Applications.css"; // Add a CSS file for styling if needed
 
-const AdminApplications = () => {
+const Applications = () => {
     const [applications, setApplications] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [processing, setProcessing] = useState(false); // ⬅️ NEW STATE
 
     useEffect(() => {
-        document.title = "Admin | Applications";
-        fetchApplications();
+        document.title = "Portfolio-Pro | Applications";
+
+        // Fetch applications from backend
+        axios.get("http://localhost:3000/admin/applications")
+            .then((response) => {
+                setApplications(response.data);
+                setLoading(false);
+            })
+            .catch((error) => {
+                console.error("Error fetching applications:", error);
+                setError("Failed to load applications");
+                setLoading(false);
+            });
     }, []);
 
-    const fetchApplications = async () => {
+    const handleApprove = async (id) => {
+        setProcessing(true); // ⬅️ Start loading
         try {
-            const response = await axios.get('http://localhost:3000/admin/applications');
-            console.log(response.data);
-            setApplications(response.data);
+            await axios.post(`http://localhost:3000/admin/application/${id}`, { status: 'approve' });
+            alert("Freelancer approved!");
+            window.location.reload();
         } catch (error) {
-            console.error("Error fetching applications:", error);
-            alert("Failed to load applications");
+            console.error("Error approving freelancer:", error);
+            alert("Failed to approve freelancer.");
         } finally {
-            setIsLoading(false);
+            setProcessing(false); // ⬅️ End loading
         }
     };
 
-    const handleDecision = async (freelancerId, decision) => {
+    const handleReject = async (id) => {
+        setProcessing(true); // ⬅️ Start loading
         try {
-            const res = await axios.post(`http://localhost:3000/admin/application/${freelancerId}`, { status: decision });
-            if (res.status === 200) {
-                alert(`Freelancer ${decision}ed successfully!`);
-                fetchApplications(); // Refresh list
-            }
-        } catch (err) {
-            console.error(`Failed to ${decision} freelancer:`, err);
-            alert(`Failed to ${decision} freelancer`);
+            await axios.post(`http://localhost:3000/admin/application/${id}`, { status: 'reject' });
+            alert("Freelancer rejected.");
+            window.location.reload();
+        } catch (error) {
+            console.error("Error rejecting freelancer:", error);
+            alert("Failed to reject freelancer.");
+        } finally {
+            setProcessing(false); // ⬅️ End loading
         }
     };
+
+    if (loading) return <p>Loading applications...</p>;
+    if (error) return <p>{error}</p>;
 
     return (
-        <div className="admin-panel">
-            <h1>Freelancer Applications</h1>
-
-            {isLoading ? (
-                <p>Loading applications...</p>
-            ) : applications.length === 0 ? (
+        <div className="applications-container">
+            <h2>Freelancer Applications</h2>
+            {processing && <p className="processing-text">Processing request & sending email, please wait...</p>}
+            {applications.length === 0 ? (
                 <p>No pending applications.</p>
             ) : (
-                <div className="applications-list">
-                    {applications.map((freelancer) => (
-                        <div key={freelancer.id} className="application-card">
-                            <img
-                                src={freelancer.profilePictureURL
-                                    ? `http://localhost:3000/${freelancer.profilePictureURL}`
-                                    : 'http://localhost:3000/uploads/profile_pics/default-user.png'}
-                                alt="Profile"
-                                className="profile-thumb"
-                            />
-
-                            <h3>{freelancer.name || 'Unknown Freelancer'}</h3>
-                            <p><strong>Title:</strong> {freelancer.title || 'N/A'}</p>
-                            <p><strong>Skills:</strong> {freelancer.skills || 'N/A'}</p>
-                            <p><strong>Experience:</strong> {freelancer.experience ? `${freelancer.experience} years` : 'N/A'}</p>
-                            <p><strong>Bio:</strong> {freelancer.bio || 'N/A'}</p>
-
-                            {/* Conditional rendering for user information */}
-                            <p><strong>First Name:</strong> {freelancer.user?.first_name || 'N/A'}</p>
-                            <p><strong>Last Name:</strong> {freelancer.user?.last_name || 'N/A'}</p>
-                            <p><strong>Email:</strong> {freelancer.user?.email || 'N/A'}</p>
-                            <p><strong>Contact:</strong> {freelancer.user?.contact || 'N/A'}</p>
-                            <p><strong>City:</strong> {freelancer.user?.city || 'N/A'}</p>
-                            <p><strong>Country:</strong> {freelancer.user?.country || 'N/A'}</p>
-
-                            {/* Download resume */}
-                            <a
-                                href={`http://localhost:3000/download-resume/${freelancer.resume_path?.replace(/\\/g, '/').split('/').pop()}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                download
-                            >
-                                Download Resume
-                            </a>
-
-                            <div className="btn-group">
-                                <button className="approve-btn" onClick={() => handleDecision(freelancer.id, 'approve')}>Approve</button>
-                                <button className="reject-btn" onClick={() => handleDecision(freelancer.id, 'reject')}>Reject</button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                <table className="applications-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Title</th>
+                            <th>Skills</th>
+                            <th>Experience</th>
+                            <th>Resume</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {applications.map((app) => (
+                            <tr key={app.freelancer_id}>
+                                <td>{app.freelancer_id}</td>
+                                <td>{app.email}</td>
+                                <td>{app.first_name}</td>
+                                <td>{app.last_name}</td>
+                                <td>{app.title}</td>
+                                <td>{app.skills}</td>
+                                <td>{app.experience} years</td>
+                                <td>
+                                    <a
+                                        href={`http://localhost:3000/download-resume/${app.resume_path.replace(/\\/g, '/').split('/').pop()}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        download
+                                    >
+                                        <button className="download-btn">Download Resume</button>
+                                    </a>
+                                </td>
+                                <td>
+                                    {app.status === "Pending" && (
+                                        <>
+                                            <button
+                                                className="approve-btn"
+                                                onClick={() => handleApprove(app.freelancer_id)}
+                                                disabled={processing} // Disable if processing
+                                            >
+                                                Approve
+                                            </button>
+                                            <button
+                                                className="reject-btn"
+                                                onClick={() => handleReject(app.freelancer_id)}
+                                                disabled={processing} // Disable if processing
+                                            >
+                                                Reject
+                                            </button>
+                                        </>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             )}
         </div>
     );
 };
 
-export default AdminApplications;
+export default Applications;
