@@ -1,35 +1,88 @@
+/* applications.css */
+
+/* General styles for the container */
 .applications-container {
-    max-width: 800px;
-    margin: auto;
+    font-family: Arial, sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
     padding: 20px;
-    text-align: center;
+    background-color: #f4f4f4;
 }
 
+h2 {
+    text-align: center;
+    color: #333;
+    font-size: 28px;
+    margin-bottom: 20px;
+}
+
+/* Table styles */
 .applications-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
+    background-color: #fff;
 }
 
-.applications-table th, .applications-table td {
+.applications-table th,
+.applications-table td {
+    padding: 12px;
+    text-align: left;
     border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
+}
+
+.applications-table th {
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+}
+
+.applications-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Button styles for approve/reject actions */
+button {
+    padding: 8px 16px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    margin: 5px;
+    transition: background-color 0.3s ease;
 }
 
 .approve-btn {
-    background-color: green;
+    background-color: #4CAF50;
     color: white;
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
-    margin-right: 5px;
 }
 
 .reject-btn {
-    background-color: red;
+    background-color: #f44336;
     color: white;
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
+}
+
+/* Button hover effect */
+button:hover {
+    opacity: 0.8;
+}
+
+/* Download resume button */
+.download-btn {
+    background-color: #2196F3;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 5px;
+    text-decoration: none;
+}
+
+.download-btn:hover {
+    background-color: #0b7dda;
+}
+
+/* Loading and error messages */
+p {
+    text-align: center;
+    font-size: 18px;
+    color: #333;
 }

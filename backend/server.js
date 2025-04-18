@@ -2,7 +2,7 @@ const express = require('express');
 const nodemailer = require('nodemailer');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
 const multer = require('multer');
 const path = require('path');
@@ -22,21 +22,26 @@ app.use(cors({
 
 const generateOTP = () => Math.floor(1000 + Math.random() * 9000).toString();
 
-// ✅ MySQL Connection
-const db = mysql.createConnection({
+// ✅ Use MySQL Pool instead of single connection
+const db = mysql.createPool({
     host: 'localhost',
     user: 'root',
     password: '',
-    database: 'portfolio_pro'
+    database: 'portfolio_pro',
+    waitForConnections: true,
+    connectionLimit: 10, // You can tweak this if needed
+    queueLimit: 0
 });
 
-db.connect((err) => {
+db.getConnection((err, connection) => {
     if (err) {
-        console.error('❌ MySQL connection failed:', err);
+        console.error('❌ MySQL connection pool failed:', err);
     } else {
-        console.log('✅ Connected to MySQL database');
+        console.log('✅ Connected to MySQL database via pool');
+        connection.release(); // always release the connection after initial test
     }
 });
+
 
 // ✅ Nodemailer Transport
 const transporter = nodemailer.createTransport({
@@ -47,20 +52,24 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
 // ✅ Check if email exists
-app.post('/check-email', (req, res) => {
+app.post('/check-email', async (req, res) => {
     const { email } = req.body;
+
     if (!email) return res.status(400).json({ success: false, message: 'Email is required' });
 
-    const sql = 'SELECT email FROM users WHERE email = ?';
-    db.query(sql, [email], (err, result) => {
-        if (err) {
-            console.error('Error checking email:', err);
-            return res.status(500).json({ success: false, message: 'Server error' });
-        }
-        return res.json({ exists: result.length > 0 });
-    });
+    try {
+        const [rows] = await db.query('SELECT email FROM users WHERE email = ?', [email]);
+        return res.json({ exists: rows.length > 0 });
+    } catch (err) {
+        console.error('Error checking email:', err);
+        return res.status(500).json({ success: false, message: 'Server error' });
+    }
 });
+
 
 // ✅ Send OTP
 app.post('/send-otp', async (req, res) => {
@@ -96,7 +105,7 @@ app.post('/send-otp', async (req, res) => {
 });
 
 // ✅ Verify OTP
-app.post('/verify-otp', (req, res) => {
+app.post('/verify-otp', async(req, res) => {
     const { email, otp } = req.body;
     const otpCookie = req.cookies.otp_cookie;
 
@@ -154,20 +163,22 @@ app.post('/register', async (req, res) => {
             userType
         ];
 
-        db.query(sql, values, (err) => {
-            if (err) {
-                console.error('Registration error:', err);
-                return res.status(500).json({ success: false, message: 'User already exists or database error' });
-            }
+        await db.query(sql, values);
 
-            return res.status(200).json({ success: true, message: 'User registered successfully' });
-        });
+        return res.status(200).json({ success: true, message: 'User registered successfully' });
 
-    } catch (error) {
-        console.error('Error hashing password:', error);
-        res.status(500).json({ success: false, message: 'Internal server error' });
+    } catch (err) {
+        console.error('Registration error:', err);
+        
+        if (err.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ success: false, message: 'Email is already registered. Please use a different email or login.' });
+        }
+    
+        return res.status(500).json({ success: false, message: 'User may already exist or a DB error occurred' });
     }
+    
 });
+
 
 // ✅ Login
 // ✅ Login Route
@@ -175,59 +186,49 @@ app.post('/register', async (req, res) => {
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
-    // Input validation: Check if email and password are provided
     if (!email || !password) {
         return res.status(400).json({ success: false, message: "Email and password are required" });
     }
 
     try {
-        // Query the database to check if the email exists
-        const sql = 'SELECT * FROM users WHERE email = ? LIMIT 1';
-        db.query(sql, [email], async (err, results) => {
-            if (err) {
-                console.error('Database error:', err);
-                return res.status(500).json({ success: false, message: 'Database error' });
-            }
+        const [results] = await db.query('SELECT * FROM users WHERE email = ? LIMIT 1', [email]);
 
-            // Check if user exists in the database
-            if (results.length === 0) {
-                return res.status(401).json({ success: false, message: 'Invalid email or password' });
-            }
+        if (results.length === 0) {
+            return res.status(401).json({ success: false, message: 'Invalid email or password' });
+        }
 
-            const user = results[0];
+        const user = results[0];
 
-            // Compare password with the hashed password in the database
-            const isPasswordValid = await bcrypt.compare(password, user.password);
-            if (!isPasswordValid) {
-                return res.status(401).json({ success: false, message: 'Invalid email or password' });
-            }
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ success: false, message: 'Invalid email or password' });
+        }
 
-            // Create user payload to store in session cookie
-            const userPayload = {
-                id: user.id,
-                role: user.role,
-                email: user.email
-            };
+        const userPayload = {
+            id: user.id,
+            role: user.role,
+            email: user.email
+        };
 
-            // Set session cookie with user details (store it for 1 day)
-            res.cookie('user_session', JSON.stringify(userPayload), {
-                httpOnly: true,
-                secure: false, // Set to true in production with HTTPS
-                sameSite: 'Strict',
-                maxAge: 24 * 60 * 60 * 1000 // 1 day
-            });
-
-            return res.status(200).json({
-                success: true,
-                message: 'Login successful',
-                user: userPayload
-            });
+        res.cookie('user_session', JSON.stringify(userPayload), {
+            httpOnly: true,
+            secure: false,
+            sameSite: 'Strict',
+            maxAge: 24 * 60 * 60 * 1000 // 1 day
         });
+
+        return res.status(200).json({
+            success: true,
+            message: 'Login successful',
+            user: userPayload
+        });
+
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({ success: false, message: 'Internal server error' });
+        return res.status(500).json({ success: false, message: 'Internal server error' });
     }
 });
+
 
 
 app.get('/check-session', (req, res) => {
@@ -248,74 +249,27 @@ app.get('/check-session', (req, res) => {
     }
 });
 
-// ✅ Check if freelancer profile exists
-app.get('/freelancer/profile/:id', (req, res) => {
-    const { id } = req.params;
-
-    const sql = 'SELECT * FROM freelancer WHERE user_id = ? LIMIT 1';
-    db.query(sql, [id], (err, result) => {
-        if (err) {
-            console.error('Error checking freelancer profile:', err);
-            return res.status(500).json({ success: false, message: 'Server error' });
-        }
-
-        if (result.length === 0) {
-            return res.status(200).json({ profileExists: false });
-        } else {
-            return res.status(200).json({ profileExists: true });
-        }
-    });
-});
-
-// ✅ Complete Freelancer Profile
-app.post('/freelancer/:id/complete-profile', (req, res) => {
-    const { id } = req.params;
-    const { title, bio, skills, resume } = req.body;
-
-    if (!title || !bio || !skills || !resume) {
-        return res.status(400).json({ success: false, message: 'All fields are required' });
-    }
-
-    // Handle file upload (resume)
-    const resumePath = `uploads/resumes/${resume.name}`;
-
-    // Insert profile data into the freelancer table
-    const sql = `
-        INSERT INTO freelancer (user_id, title, bio, skills, resume_path, created_at)
-        VALUES (?, ?, ?, ?, ?, NOW())
-    `;
-    const values = [id, title, bio, skills, resumePath];
-
-    db.query(sql, values, (err) => {
-        if (err) {
-            console.error('Error completing profile:', err);
-            return res.status(500).json({ success: false, message: 'Error completing profile' });
-        }
-
-        // Save the resume file to the server (you need to implement file upload handling logic)
-        // Resumable file storage logic goes here
-
-        res.json({ success: true, message: 'Profile completed successfully' });
-    });
-});
-
-app.get('/freelancer/check/:user_id', (req, res) => {
+app.get('/freelancer/check/:user_id', async (req, res) => {
     const userId = req.params.user_id;
 
-    const sql = 'SELECT * FROM freelancer WHERE user_id = ?';
-    db.query(sql, [userId], (err, results) => {
-        if (err) {
-            console.error('Error checking freelancer profile:', err);
-            return res.status(500).json({ message: 'Server error' });
-        }
+    try {
+        const connection = await db.getConnection();
+        const [results] = await connection.query('SELECT * FROM freelancer WHERE user_id = ?', [userId]);
+        connection.release();
 
         if (results.length === 0) {
-            return res.json({ exists: false });
+            return res.status(200).json({ exists: false });
         }
 
-        res.json({ exists: true, data: results[0] });
-    });
+        return res.status(200).json({ exists: true, data: results[0] });
+
+    } catch (err) {
+        console.error('[Profile Check] Error:', err);
+        return res.status(500).json({ message: 'Server error' });
+    }
 });
+
+
 
 // Setup for file storage
 const storage = multer.diskStorage({
@@ -350,54 +304,171 @@ const storage = multer.diskStorage({
 // Initialize multer without file filter (allow all file types)
 const upload = multer({ storage: storage });
 
-app.post('/freelancer/submit', upload.fields([
+app.post('/freelancer/submit', upload.fields([ 
     { name: 'profilePicture', maxCount: 1 },
     { name: 'resume', maxCount: 1 }
-]), (req, res) => {
+]), async (req, res) => {
     const { user_id, title, bio, skills, social_links } = req.body;
 
-    // Validate mandatory fields
+    // Validate required fields
     if (!user_id || !title || !bio || !skills) {
-        return res.status(400).json({ message: 'Please fill all required fields: user_id, title, bio, skills.' });
+        return res.status(400).json({
+            message: 'Required fields: user_id, title, bio, skills'
+        });
     }
 
-    // Default profile picture if no image is uploaded
+    // Default fallback profile picture
     let profilePicPath = 'uploads/default-user.png';
 
-    // If the profile picture is provided, save it and update the path
+    // Handle profile picture upload
     if (req.files['profilePicture']) {
-        const fileExtension = path.extname(req.files['profilePicture'][0].originalname);
-        const newFileName = `${Date.now()}-${req.files['profilePicture'][0].originalname}`;
+        const pic = req.files['profilePicture'][0];
+        const newFileName = `${Date.now()}-${pic.originalname}`;
         const newFilePath = path.join('uploads', 'profile_pics', newFileName);
-
-        // Move the file to the correct location
-        fs.renameSync(req.files['profilePicture'][0].path, newFilePath);
-
-        profilePicPath = newFilePath;  // Update the profile picture path
+        fs.renameSync(pic.path, newFilePath);
+        profilePicPath = newFilePath;
     }
 
-    // Resume handling
+    // Handle resume upload
     let resumePath = null;
     if (req.files['resume']) {
-        resumePath = path.join('uploads', 'resumes', req.files['resume'][0].filename);
-        fs.renameSync(req.files['resume'][0].path, resumePath); // Move the resume to the correct location
+        const resume = req.files['resume'][0];
+        const resumeFileName = `${Date.now()}-${resume.originalname}`;
+        const newResumePath = path.join('uploads', 'resumes', resumeFileName);
+        fs.renameSync(resume.path, newResumePath);
+        resumePath = newResumePath;
     }
-    
 
-    // SQL query to insert freelancer data
+    // Prepare SQL query
     const sql = `
         INSERT INTO freelancer (user_id, title, bio, skills, resume_path, profile_pic_path, social_links, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending')
     `;
 
-    db.query(sql, [user_id, title, bio, skills, resumePath, profilePicPath, social_links, 'Pending'], (err, result) => {
-        if (err) {
-            console.error('Error inserting freelancer profile:', err);
-            return res.status(500).json({ message: 'Server error' });
+    try {
+        const connection = await db.getConnection();
+        await connection.query(sql, [user_id, title, bio, skills, resumePath, profilePicPath, social_links]);
+        console.log('Profile submitted successfully!');
+        connection.release();
+        return res.status(200).json({ message: 'Profile submitted successfully with status: Pending' });
+    } catch (err) {
+        console.error('[Freelancer Submit] Insert error:', err);
+        return res.status(500).json({ message: 'Error saving profile' });
+    }
+});
+
+
+
+// GET all pending applications with user details
+app.get('/admin/applications', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                f.id AS freelancer_id,
+                f.title,
+                f.skills,
+                f.experience,
+                f.bio,
+                f.profile_pic_path,
+                f.resume_path,
+                f.status,
+                u.first_name,
+                u.last_name,
+                u.email,
+                u.contact,
+                u.city,
+                u.country
+            FROM freelancer f
+            JOIN users u ON f.user_id = u.id
+            WHERE f.status = 'Pending'
+        `;
+        
+        const [pending] = await db.query(query);
+        res.json(pending);
+    } catch (error) {
+        console.error("Error fetching applications:", error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
+// POST: Approve or Reject a freelancer application
+// POST: Approve or Reject a freelancer application
+app.post('/admin/application/:id', async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!['approve', 'reject'].includes(status)) {
+        return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const newStatus = status === 'approve' ? 'Approved' : 'Rejected';
+    const query = status === 'approve' 
+        ? "UPDATE freelancer SET status = ? WHERE id = ?"
+        : "DELETE FROM freelancer WHERE id = ?";
+
+    try {
+        if (status === 'approve') {
+            await db.query(query, [newStatus, id]);
+        } else {
+            await db.query(query, [id]);
         }
 
-        res.json({ message: 'Freelancer profile submitted with status: Pending' });
+        // Fetch the freelancer's email from the users table for notifications
+        const [userResult] = await db.query("SELECT email, first_name, last_name FROM users WHERE id = (SELECT user_id FROM freelancer WHERE id = ?)", [id]);
+        
+        if (userResult.length > 0) {
+            const { email, first_name, last_name } = userResult[0];
+
+            // Send email notification
+            let transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASS
+                }
+            });
+
+            const mailOptions = status === 'approve' 
+            ?{
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: `Your Freelancer Application has been Approved`,
+                text: `Dear ${first_name} ${last_name},\n\nCongratulations! Your freelancer application has been approved.Your profile will we visible in our site\n\nRegards,\nPortfolio Pro Team`
+            }:{
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: `Your Freelancer Application has been Rejected`,
+                text: `Dear ${first_name} ${last_name},\n\nYour freelancer application has been Rejected.Login and reapply with valid documents and info.\n\nRegards,\nPortfolio Pro Team`
+            };
+
+                transporter.sendMail(mailOptions, (error, info) => {
+                    if (error) {
+                        console.error('Email sending failed:', error);
+                    } else {
+                        console.log('Email sent: ' + info.response);
+                    }
+                });
+            }
+
+            res.json({ message: `Freelancer ${newStatus}` });
+        } catch (error) {
+            console.error("Error processing application:", error);
+            res.status(500).json({ message: 'Server error' });
+        }
     });
+
+
+app.get('/download-resume/:fileName', (req, res) => {
+    const { fileName } = req.params;
+    const filePath = path.join(__dirname, 'uploads', 'resumes', fileName);
+
+    if (fs.existsSync(filePath)) {
+        res.setHeader('Content-Disposition', 'attachment; filename=' + fileName); // This forces the download
+        res.sendFile(filePath);
+    } else {
+        res.status(404).send('File not found');
+    }
 });
 
 // ✅ Start server

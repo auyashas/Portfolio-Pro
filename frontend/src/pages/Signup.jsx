@@ -89,44 +89,57 @@ const Signup = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+        console.log("Form submitted");
+    
+        console.log({ email, password, confirmPassword, isOtpVerified });
+    
         if (!email || !password || !confirmPassword) {
             alert('Please fill in all fields.');
+            console.log("Missing fields");
             return;
         }
-
+    
         if (password !== confirmPassword) {
             alert('Passwords do not match.');
+            console.log("Passwords mismatch");
             return;
         }
-
+    
         if (!validatePassword(password)) {
             alert('Password must be at least 8 characters long and contain at least one number.');
+            console.log("Password validation failed");
             return;
         }
-
+    
         if (!isOtpVerified) {
             alert("Please verify your OTP before proceeding.");
+            console.log("OTP not verified");
             return;
         }
-
+    
         try {
+            console.log("Sending request to /check-email...");
             const response = await axios.post('http://localhost:3000/check-email', { email });
+            console.log("Response from backend:", response.data);
+
             if (response.data.exists) {
                 alert('User already exists. Please log in.');
+                console.log("Email already exists");
                 return;
             }
-
+    
             localStorage.setItem('signupEmail', email);
             localStorage.setItem('signupPassword', password);
             localStorage.setItem('userType', userType);
-
+            console.log("All validations passed, navigating to /register");
+    
             navigate('/register');
         } catch (error) {
             console.error('Error checking email:', error);
             alert('Error checking email. Please try again later.');
         }
     };
+    
 
     return (
         <div className="auth-box">

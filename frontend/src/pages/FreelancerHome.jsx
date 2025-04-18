@@ -1,14 +1,17 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Hero from '../components/Hero'; // Corrected import for Hero
-import Footer from '../components/Footer';
 import axios from 'axios';
-
+import Hero from '../components/Hero'; 
+import Footer from '../components/Footer';
 const FreelancerHome = () => {
-    const { id } = useParams(); // This is user_id
+    const { id } = useParams();
     const navigate = useNavigate();
+    const hasCheckedProfile = useRef(false); // 💡 Prevent double alert
 
     useEffect(() => {
+        if (hasCheckedProfile.current) return;
+        hasCheckedProfile.current = true;
+
         const checkProfile = async () => {
             try {
                 const response = await axios.get(`http://localhost:3000/freelancer/check/${id}`);
@@ -16,7 +19,6 @@ const FreelancerHome = () => {
                     alert("Please complete your profile to continue.");
                     navigate(`/freelancer/${id}/freelancer-application`);
                 }
-                // You can set freelancer data in state here if needed
             } catch (error) {
                 console.error("Error checking freelancer profile:", error);
             }

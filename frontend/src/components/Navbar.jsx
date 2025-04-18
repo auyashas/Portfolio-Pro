@@ -35,7 +35,7 @@ export default function Navbar() {
         if (role === "admin") {
             return (
                 <>
-                    <Link to="/applications">Applications</Link>
+                    <Link to="/admin/applications">Applications</Link>
                     <Link to="/active-freelancers">Active Freelancers</Link>
                     <button onClick={handleLogout}>Logout</button>
                 </>

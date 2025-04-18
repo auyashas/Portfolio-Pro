@@ -74,7 +74,7 @@ const FreelancerApplication = () => {
         formDataToSend.append('bio', bio.trim());
         formDataToSend.append('social_links', formData.social_links.trim());
         formDataToSend.append('skills', skill.trim());
-        formDataToSend.append('experience', formData.experience.trim());
+        formDataToSend.append('experience', formData.experience);
         formDataToSend.append('title', title);
 
         try {

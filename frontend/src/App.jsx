@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Layout from './Layout'; // 👈 Import the Layout you just created
+import Layout from './Layout';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Terms from './pages/Terms';
@@ -11,13 +11,13 @@ import FreelancerHome from './pages/FreelancerHome';
 import ClientHome from './pages/ClientHome';
 import AdminHome from './pages/AdminHome';
 import FreelancerApplication from './pages/FreelancerApplication';
-import ProtectedRoute from './ProtectedRoute'; // If it's in a separate file
+import AdminApplication from './pages/AdminApplication'; // ✅ newly added
+import ProtectedRoute from './ProtectedRoute';
 
 function App() {
     return (
         <Router>
             <Routes>
-                {/* All Routes wrapped in the Layout */}
                 <Route path="/" element={<Layout />}>
                     {/* Public Routes */}
                     <Route index element={<Home />} />
@@ -41,6 +41,14 @@ function App() {
                         element={
                             <ProtectedRoute role="admin">
                                 <AdminHome />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="admin/applications"
+                        element={
+                            <ProtectedRoute role="admin">
+                                <AdminApplication />
                             </ProtectedRoute>
                         }
                     />

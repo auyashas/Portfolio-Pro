@@ -12,7 +12,7 @@ const Applications = () => {
         document.title = "Portfolio-Pro | Applications";
         
         // Fetch applications from backend
-        axios.get("http://localhost:3000/api/applications") 
+        axios.get("http://localhost:3000/admin/applications") 
             .then((response) => {
                 setApplications(response.data);
                 setLoading(false);
@@ -28,7 +28,6 @@ const Applications = () => {
     if (error) return <p>{error}</p>;
 
     return (
-        
         <div className="applications-container">
             <Navbar />
             <h2>Freelancer Applications</h2>
@@ -38,25 +37,38 @@ const Applications = () => {
                 <table className="applications-table">
                     <thead>
                         <tr>
-                            <th>Name</th>
+                            <th>ID</th>
                             <th>Email</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Title</th>
                             <th>Skills</th>
-                            <th>Status</th>
+                            <th>Experience</th>
+                            <th>Resume</th>
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         {applications.map((app) => (
-                            <tr key={app.id}>
-                                <td>{app.name}</td>
-                                <td>{app.login_mail}</td>
-                                <td>{app.skill}</td>
-                                <td>{app.status}</td>
+                            <tr key={app.freelancer_id}>
+                                <td>{app.freelancer_id}</td>
+                                <td>{app.email}</td>
+                                <td>{app.first_name}</td>
+                                <td>{app.last_name}</td>
+                                <td>{app.title}</td>
+                                <td>{app.skills}</td>
+                                <td>{app.experience} years</td>
+                                <td>
+                                    {/* Add a button for downloading resume */}
+                                    <a href={`http://localhost:3000${app.resume_path}`} target="_blank" rel="noopener noreferrer">
+                                        <button className="download-btn">Download Resume</button>
+                                    </a>
+                                </td>
                                 <td>
                                     {app.status === "Pending" && (
                                         <>
-                                            <button className="approve-btn" onClick={() => handleApprove(app.id)}>Approve</button>
-                                            <button className="reject-btn" onClick={() => handleReject(app.id)}>Reject</button>
+                                            <button className="approve-btn" onClick={() => handleApprove(app.freelancer_id)}>Approve</button>
+                                            <button className="reject-btn" onClick={() => handleReject(app.freelancer_id)}>Reject</button>
                                         </>
                                     )}
                                 </td>
@@ -72,7 +84,7 @@ const Applications = () => {
 // Function to approve a freelancer
 const handleApprove = async (id) => {
     try {
-        await axios.post(`http://localhost:3000/api/applications/approve/${id}`);
+        await axios.post(`http://localhost:3000/admin/application/${id}`, { status: 'approve' });
         alert("Freelancer approved!");
         window.location.reload(); // Reload to reflect changes
     } catch (error) {
@@ -84,7 +96,7 @@ const handleApprove = async (id) => {
 // Function to reject a freelancer
 const handleReject = async (id) => {
     try {
-        await axios.post(`http://localhost:3000/api/applications/reject/${id}`);
+        await axios.post(`http://localhost:3000/admin/application/${id}`, { status: 'reject' });
         alert("Freelancer rejected.");
         window.location.reload(); // Reload to reflect changes
     } catch (error) {

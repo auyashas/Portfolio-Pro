@@ -1,0 +1,32 @@
+.admin-panel {
+    padding: 20px;
+}
+
+.applications-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.application-card {
+    width: 300px;
+    background: #f4f4f4;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+}
+
+.profile-thumb {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+}
+
+.btn-group {
+    margin-top: 10px;
+}
+
+.approve-btn, .reject-btn {
+    margin-right: 10px;
+    padding: 5px 10px;
+}
