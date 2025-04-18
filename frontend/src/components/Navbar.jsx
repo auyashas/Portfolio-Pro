@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { MoreVertical } from "lucide-react";
-import { useSession } from "../hooks/useSession"; // ✅ now using cookie-based session
+import { useSession } from "../hooks/useSession"; // ✅ cookie-based session
 import "./Navbar.css";
 
 export default function Navbar() {
@@ -9,7 +9,7 @@ export default function Navbar() {
     const dropdownRef = useRef(null);
     const [showDropdown, setShowDropdown] = useState(false);
 
-    const { user, logout, loading } = useSession();  // Ensure the `user` is coming correctly
+    const { user, logout, loading } = useSession();  
     const role = user?.role;
 
     useEffect(() => {
@@ -18,7 +18,6 @@ export default function Navbar() {
                 setShowDropdown(false);
             }
         };
-
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
@@ -27,7 +26,7 @@ export default function Navbar() {
         const confirmLogout = window.confirm("Are you sure you want to log out?");
         if (confirmLogout) {
             await logout();
-            navigate("/"); // Redirect to homepage after logout
+            navigate("/");
         }
     };
 
@@ -36,7 +35,7 @@ export default function Navbar() {
             return (
                 <>
                     <Link to="/admin/applications">Applications</Link>
-                    <Link to="/active-freelancers">Active Freelancers</Link>
+                    <Link to="/admin/dashboard">Dashboard</Link> {/* ✅ new link */}
                     <button onClick={handleLogout}>Logout</button>
                 </>
             );
@@ -68,7 +67,7 @@ export default function Navbar() {
             <ul className="nav-options">
                 <NavLink to="/">Home</NavLink>
                 <NavLink to="/about">About Us</NavLink>
-                {!user && !loading && <NavLink to="/signup">Apply as Freelancer</NavLink>}
+                {!user && !loading && <NavLink to="/signup">Signup</NavLink>}
             </ul>
 
             {!loading && (
@@ -80,7 +79,6 @@ export default function Navbar() {
                                 {renderDropdownOptions()}
                             </div>
                         )}
-
                     </div>
                 ) : (
                     <button className="nav-btn" onClick={() => navigate("/login")}>Login</button>

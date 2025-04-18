@@ -475,6 +475,80 @@ app.get('/download-resume/:fileName', (req, res) => {
     }
 });
 
+// backend: routes/admin.js
+app.get('/admin/dashboard', async (req, res) => {
+    try {
+        const connection = await db.getConnection();
+
+        // Fetch freelancer details (joined with users)
+        const [freelancers] = await connection.query(`
+            SELECT 
+                f.id,
+                u.first_name,
+                u.last_name,
+                f.title,
+                f.skills,
+                f.status,
+                f.resume_path
+            FROM freelancer f
+            JOIN users u ON f.user_id = u.id
+        `);
+
+        // Fetch client details
+        const [clients] = await connection.query(`
+            SELECT id, email, first_name AS firstname, last_name AS lastname, contact, city 
+            FROM users 
+            WHERE role = 'client'
+        `);
+
+        // Dashboard stats
+        const [[{ total_users }]] = await connection.query(`SELECT COUNT(*) AS total_users FROM users WHERE role != 'admin'`);
+        const [[{ total_freelancers }]] = await connection.query(`SELECT COUNT(*) AS total_freelancers FROM freelancer WHERE status = 'Approved'`);
+        const [[{ total_pending }]] = await connection.query(`SELECT COUNT(*) AS total_pending FROM freelancer WHERE status = 'Pending'`);
+        const [[{ total_clients }]] = await connection.query(`SELECT COUNT(*) AS total_clients FROM users WHERE role = 'client'`);
+
+        connection.release();
+
+        res.status(200).json({
+            freelancers,
+            clients,
+            stats: {
+                total_users,
+                total_freelancers,
+                total_pending,
+                total_clients
+            }
+        });
+
+    } catch (error) {
+        console.error('[Admin Dashboard] Fetch error:', error);
+        res.status(500).json({ message: 'Error loading dashboard data' });
+    }
+});
+
+
+app.delete('/admin/freelancer/:id', async (req, res) => {
+    const freelancerId = req.params.id;
+
+    try {
+        const connection = await db.getConnection();
+        
+        // Check if freelancer exists before deleting
+        const [freelancer] = await connection.query('SELECT * FROM freelancer WHERE id = ?', [freelancerId]);
+        if (!freelancer.length) {
+            return res.status(404).json({ message: 'Freelancer not found' });
+        }
+
+        await connection.query('DELETE FROM freelancer WHERE id = ?', [freelancerId]);
+        
+        connection.release();
+        return res.status(200).json({ message: 'Freelancer deleted successfully' });
+    } catch (err) {
+        console.error('[Delete Freelancer]', err);
+        return res.status(500).json({ message: 'Error deleting freelancer' });
+    }
+});
+
 // ✅ Start server
 app.listen(PORT, () => {
     console.log(`✅ Server running on http://localhost:${PORT}`);

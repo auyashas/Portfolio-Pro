@@ -11,7 +11,8 @@ import FreelancerHome from './pages/FreelancerHome';
 import ClientHome from './pages/ClientHome';
 import AdminHome from './pages/AdminHome';
 import FreelancerApplication from './pages/FreelancerApplication';
-import AdminApplication from './pages/AdminApplication'; // ✅ newly added
+import AdminApplication from './pages/AdminApplication';
+import AdminDashboard from './pages/AdminDashboard'; // ✅ newly imported
 import ProtectedRoute from './ProtectedRoute';
 
 function App() {
@@ -49,6 +50,14 @@ function App() {
                         element={
                             <ProtectedRoute role="admin">
                                 <AdminApplication />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="admin/dashboard"
+                        element={
+                            <ProtectedRoute role="admin">
+                                <AdminDashboard />
                             </ProtectedRoute>
                         }
                     />
