@@ -18,7 +18,7 @@ app.use(cookieParser());
 app.use(cors({
     origin: 'http://localhost:5173',
     credentials: true,
-    exposedHeaders: ['Content-Disposition'] 
+    exposedHeaders: ['Content-Disposition']
 }));
 
 const generateOTP = () => Math.floor(1000 + Math.random() * 9000).toString();
@@ -106,7 +106,7 @@ app.post('/send-otp', async (req, res) => {
 });
 
 // ✅ Verify OTP
-app.post('/verify-otp', async(req, res) => {
+app.post('/verify-otp', async (req, res) => {
     const { email, otp } = req.body;
     const otpCookie = req.cookies.otp_cookie;
 
@@ -170,14 +170,14 @@ app.post('/register', async (req, res) => {
 
     } catch (err) {
         console.error('Registration error:', err);
-        
+
         if (err.code === 'ER_DUP_ENTRY') {
             return res.status(400).json({ success: false, message: 'Email is already registered. Please use a different email or login.' });
         }
-    
+
         return res.status(500).json({ success: false, message: 'User may already exist or a DB error occurred' });
     }
-    
+
 });
 
 
@@ -305,11 +305,11 @@ const storage = multer.diskStorage({
 // Initialize multer without file filter (allow all file types)
 const upload = multer({ storage: storage });
 
-app.post('/freelancer/submit', upload.fields([ 
+app.post('/freelancer/submit', upload.fields([
     { name: 'profilePicture', maxCount: 1 },
     { name: 'resume', maxCount: 1 }
 ]), async (req, res) => {
-    const { user_id, title, bio, skills,experience, social_links } = req.body;
+    const { user_id, title, bio, skills, experience, social_links } = req.body;
     console.log(experience)
     const experienceValue = experience === '' ? 0 : experience;
 
@@ -385,7 +385,7 @@ app.get('/admin/applications', async (req, res) => {
             JOIN users u ON f.user_id = u.id
             WHERE f.status = 'Pending'
         `;
-        
+
         const [pending] = await db.query(query);
         res.json(pending);
     } catch (error) {
@@ -484,6 +484,7 @@ app.get('/admin/dashboard', async (req, res) => {
         const [freelancers] = await connection.query(`
             SELECT 
                 f.id,
+                f.user_id,
                 u.first_name,
                 u.last_name,
                 f.title,
@@ -532,17 +533,39 @@ app.delete('/admin/freelancer/:id', async (req, res) => {
 
     try {
         const connection = await db.getConnection();
-        
-        // Check if freelancer exists before deleting
-        const [freelancer] = await connection.query('SELECT * FROM freelancer WHERE id = ?', [freelancerId]);
-        if (!freelancer.length) {
+
+        // Step 1: Check if freelancer exists and get user details
+        const [freelancerInfo] = await connection.query(`
+            SELECT u.email, u.first_name, u.last_name
+            FROM freelancer f
+            JOIN users u ON f.user_id = u.id
+            WHERE f.id = ?
+        `, [freelancerId]);
+
+        if (!freelancerInfo.length) {
+            connection.release();
             return res.status(404).json({ message: 'Freelancer not found' });
         }
 
+        const { email, first_name, last_name } = freelancerInfo[0];
+
+        // Step 2: Delete freelancer
         await connection.query('DELETE FROM freelancer WHERE id = ?', [freelancerId]);
-        
         connection.release();
-        return res.status(200).json({ message: 'Freelancer deleted successfully' });
+
+        // Step 3: Send email (after deletion)
+        const subject = 'Freelancer Account Deleted';
+        const body = `
+            Dear ${first_name} ${last_name},
+
+            Your freelancer profile has been deleted by the admin.
+
+            If you believe this was done in error, feel free to contact our support team.
+        `;
+
+        await sendEmail(email, subject, body);
+
+        return res.status(200).json({ message: 'Freelancer deleted and email sent successfully.' });
     } catch (err) {
         console.error('[Delete Freelancer]', err);
         return res.status(500).json({ message: 'Error deleting freelancer' });

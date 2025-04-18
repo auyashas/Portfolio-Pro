@@ -30,17 +30,17 @@ const AdminDashboard = () => {
     const deleteFreelancer = async (id) => {
         const confirm = window.confirm("Are you sure you want to delete this freelancer?");
         if (!confirm) return;
-
         try {
             setLoading(true);
-            await axios.delete(`http://localhost:3000/admin/freelancer/${id}`);
-            setFreelancers(freelancers.filter(f => f.id !== id));
-        } catch (err) {
-            setError('Error deleting freelancer');
-            console.error(err);
-        } finally {
+            await axios.post(`http://localhost:3000/admin/application/${id}`, { status: 'reject' });
+            alert("Freelancer Account deleted.");
+            window.location.reload();
+        } catch (error) {
+            console.error("Error rejecting freelancer:", error);
+            alert("Failed to reject freelancer.");
+        }finally {
             setLoading(false);
-        }
+        } 
     };
 
     return (
