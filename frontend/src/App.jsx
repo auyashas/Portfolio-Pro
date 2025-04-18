@@ -12,6 +12,7 @@ import ClientHome from './pages/ClientHome';
 import AdminHome from './pages/AdminHome';
 import FreelancerApplication from './pages/FreelancerApplication';
 import AdminApplication from './pages/AdminApplication';
+import AdminProfile from './pages/AdminProfile';
 import AdminDashboard from './pages/AdminDashboard'; // ✅ newly imported
 import ProtectedRoute from './ProtectedRoute';
 
@@ -27,6 +28,9 @@ function App() {
                     <Route path="terms" element={<Terms />} />
                     <Route path="register" element={<Register />} />
                     <Route path="about" element={<About />} />
+                    <Route path="admin/about" element={<About />} />
+                    <Route path="freelancer/:id/about" element={<About />} />
+                    <Route path="client/:id/about" element={<About />} />
 
                     {/* Protected Routes */}
                     <Route
@@ -81,6 +85,9 @@ function App() {
                         path="/freelancer/:id/freelancer-application"
                         element={<FreelancerApplication />}
                     />
+
+                    <Route path="/freelancer/:id/profile" element={<Profile />} />
+                    <Route path="/admin/profile/:id" element={<AdminProfile />} />
                 </Route>
             </Routes>
         </Router>

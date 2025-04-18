@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import Footer from '../components/Footer';
-import Navbar from '../components/Navbar';
 
 const About = () => {
     useEffect(() => {
@@ -13,12 +12,12 @@ const About = () => {
             </div>
             <div className="terms-container">
                 <div className="center">
-                <h1>About Portfolio Pro</h1>
-                <p>Empowering Freelancers, Enabling Businesses.</p>
+                    <h1>About Portfolio Pro</h1>
+                    <p>Empowering Freelancers, Enabling Businesses.</p>
                 </div>
 
-               
-                
+
+
 
 
                 <h2>Our Vision</h2>
@@ -52,11 +51,11 @@ const About = () => {
 
 
                 <h2>Why Choose Portfolio Pro?</h2>
-                <p>
-                    - 🌐 User-Friendly Interface: Easy navigation for both freelancers and clients. <br />
-                    - 🔒 Security First: We prioritize data privacy with secure profile management. <br />
-                    - 🚀 Growth-Focused: Designed to help freelancers gain visibility and expand their client base.
-                </p>
+                <ul>
+                    <li>- 🌐 User-Friendly Interface: Easy navigation for both freelancers and clients. <br /></li>
+                    <li>- 🔒 Security First: We prioritize data privacy with secure profile management. <br /></li>
+                    <li>- 🚀 Growth-Focused: Designed to help freelancers gain visibility and expand their client base.</li>
+                </ul>
 
 
 

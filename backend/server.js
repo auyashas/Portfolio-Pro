@@ -243,7 +243,8 @@ app.get('/check-session', (req, res) => {
         const sessionData = JSON.parse(sessionCookie);
         return res.status(200).json({
             isLoggedIn: true,
-            role: sessionData.role
+            role: sessionData.role,
+            id: sessionData.id
         });
     } catch (error) {
         return res.status(400).json({ isLoggedIn: false, message: "Invalid session data" });
@@ -571,6 +572,107 @@ app.delete('/admin/freelancer/:id', async (req, res) => {
         return res.status(500).json({ message: 'Error deleting freelancer' });
     }
 });
+
+app.get('/profile/:id', async (req, res) => {
+    const userId = req.params.id;
+
+    try {
+        const [rows] = await db.query(`
+            SELECT 
+                u.first_name, u.last_name, u.email, u.contact, u.city, u.country,
+                f.title, f.bio, f.skills, f.experience, f.resume_path, f.profile_pic_path, f.social_links, f.status
+            FROM users u
+            JOIN freelancer f ON u.id = f.user_id
+            WHERE u.id = ?
+        `, [userId]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: "Profile not found" });
+        }
+
+        res.json(rows[0]);
+    } catch (error) {
+        console.error("❌ Error fetching profile:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+app.put('/profile/:id/update', async (req, res) => {
+    const userId = req.params.id;
+    const { first_name, last_name, bio, contact, city, country } = req.body;
+
+    let connection;
+
+    try {
+        // Get a connection from the pool
+        connection = await db.getConnection();
+
+        // Start a transaction
+        await connection.beginTransaction();
+
+        // Update the freelancer profile (bio field)
+        const [freelancerResult] = await connection.query(`
+            UPDATE freelancer
+            SET bio = ?
+            WHERE user_id = ?
+        `, [bio, userId]);
+
+        if (freelancerResult.affectedRows === 0) {
+            await connection.rollback();
+            return res.status(404).json({ error: "Freelancer profile not found or no changes made" });
+        }
+
+        // Update the user's contact, city, country, and name fields
+        const [userResult] = await connection.query(`
+            UPDATE users
+            SET first_name = ?, last_name = ?, contact = ?, city = ?, country = ?
+            WHERE id = ?
+        `, [first_name, last_name, contact, city, country, userId]);
+
+        if (userResult.affectedRows === 0) {
+            await connection.rollback();
+            return res.status(404).json({ error: "User profile not found or no changes made" });
+        }
+
+        // Commit the transaction if both updates were successful
+        await connection.commit();
+
+        // Return a success message
+        res.json({ message: 'Profile updated successfully' });
+    } catch (error) {
+        if (connection) await connection.rollback();  // Rollback in case of error
+        console.error("❌ Error updating profile:", error);
+        res.status(500).json({ error: "Internal server error" });
+    } finally {
+        if (connection) connection.release();  // Always release the connection back to the pool
+    }
+});
+
+app.get('/admin/profile/:id', async (req, res) => {
+    const userId = req.params.id;
+
+    try {
+        const [rows] = await db.query(`
+            SELECT 
+                u.first_name, u.last_name, u.email, u.contact, u.city, u.country,
+                f.title, f.bio, f.skills, f.experience, f.resume_path, f.profile_pic_path, f.social_links, f.status,f.id
+            FROM users u
+            JOIN freelancer f ON u.id = f.user_id
+            WHERE u.id = ?
+        `, [userId]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: "Profile not found" });
+        }
+        res.json(rows[0]);
+    } catch (error) {
+        console.error("❌ Error fetching profile:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+
+
 
 // ✅ Start server
 app.listen(PORT, () => {

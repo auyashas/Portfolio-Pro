@@ -1,5 +1,5 @@
 body {
-    margin: 0;
+    margin-top: 20px;
     padding: 0;
     font-family: 'Roboto', sans-serif;
     background: #fdfdfd;
@@ -61,10 +61,10 @@ p {
     font-size: 20px;
 }
 
-.profile-right a{
+.profile-right a {
     transition: .3s ease;
 }
-.profile-right a:hover{
+.profile-right a:hover {
     color: #00acff;
 }
 
@@ -81,6 +81,7 @@ p {
 .resume-btn:hover {
     background-color: #1e88e5b7;
 }
+
 @media screen and (max-width: 455px) {
     .sub-container {
         display: flex;
@@ -103,5 +104,4 @@ p {
         margin-left: 23px;
         width: 100%;
     }
-
 }

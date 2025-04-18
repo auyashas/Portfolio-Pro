@@ -1,48 +1,46 @@
-import { useRef, useState, useEffect } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
-import { MoreVertical } from "lucide-react";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useSession } from "../hooks/useSession"; // ✅ cookie-based session
 import "./Navbar.css";
 
 export default function Navbar() {
     const navigate = useNavigate();
-    const dropdownRef = useRef(null);
-    const [showDropdown, setShowDropdown] = useState(false);
+    const location = useLocation();
+    const { logout, user } = useSession();  // ← get user too
 
-    const { user, logout, loading } = useSession();  
-    const role = user?.role;
-
-    useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-                setShowDropdown(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+    // Determine role based on the current URL path
+    const role = location.pathname.includes('/admin') ? 'admin' :
+                 location.pathname.includes('/freelancer') ? 'freelancer' :
+                 location.pathname.includes('/client') ? 'client' : null;
 
     const handleLogout = async () => {
         const confirmLogout = window.confirm("Are you sure you want to log out?");
         if (confirmLogout) {
             await logout();
-            navigate("/");
+            navigate("/"); // Redirect to home page after logout
         }
     };
 
-    const renderDropdownOptions = () => {
+    const renderUserOptions = () => {
+        if (!user) {
+            return (
+                <>
+                    <span>Loading...</span>
+                </>
+            );
+        }
+
         if (role === "admin") {
             return (
                 <>
                     <Link to="/admin/applications">Applications</Link>
-                    <Link to="/admin/dashboard">Dashboard</Link> {/* ✅ new link */}
+                    <Link to="/admin/dashboard">Dashboard</Link>
                     <button onClick={handleLogout}>Logout</button>
                 </>
             );
         } else if (role === "freelancer") {
             return (
                 <>
-                    <Link to="/profile">Profile</Link>
+                    {user.id && <Link to={`/freelancer/${user.id}/profile`}>Profile</Link>}
                     <Link to="/job-applications">Job Applications</Link>
                     <button onClick={handleLogout}>Logout</button>
                 </>
@@ -55,35 +53,53 @@ export default function Navbar() {
                 </>
             );
         } else {
-            return null;
+            return (
+                <>
+                    <button className="nav-btn" onClick={() => navigate("/login")}>Login</button>
+                    <NavLink to="/signup">Signup</NavLink>
+                </>
+            );
         }
+    };
+
+    const getHomeLink = () => {
+        if (role === 'admin') return '/admin';
+        if (role === 'freelancer' && user) return `/freelancer/${user.id}`;
+        if (role === 'client' && user) return `/client/${user.id}`;
+        return '/';
+    };
+
+    const getAboutLink = () => {
+        if (role === 'admin') return '/admin/about';
+        if (role === 'freelancer' && user) return `/freelancer/${user.id}/about`;
+        if (role === 'client' && user) return `/client/${user.id}/about`;
+        return '/';
     };
 
     return (
         <nav className="nav">
             <div className="logo">
-                <img src="/src/assets/character_logo.png" alt="Logo" onClick={() => navigate("/")} />
+                <img src="/src/assets/character_logo.png" alt="Logo" onClick={() => navigate(getHomeLink())} />
             </div>
             <ul className="nav-options">
-                <NavLink to="/">Home</NavLink>
-                <NavLink to="/about">About Us</NavLink>
-                {!user && !loading && <NavLink to="/signup">Signup</NavLink>}
-            </ul>
+                <NavLink to={getHomeLink()}>Home</NavLink>
+                <NavLink to={getAboutLink()}>About Us</NavLink>
+                
+                {/* Show the login/signup options if no role is assigned */}
+                {role === null && (
+                    <>
+                        <NavLink to="/signup">Signup</NavLink>
+                        <button className="nav-btn" onClick={() => navigate("/login")}>Login</button>
+                    </>
+                )}
 
-            {!loading && (
-                user ? (
-                    <div className="nav-user-menu" ref={dropdownRef}>
-                        <MoreVertical size={26} onClick={() => setShowDropdown(!showDropdown)} className="three-dots" />
-                        {showDropdown && (
-                            <div className={`dropdown-menu ${showDropdown ? "show" : ""}`}>
-                                {renderDropdownOptions()}
-                            </div>
-                        )}
+                {/* Render user options based on role */}
+                {role && (
+                    <div className="nav-user-menu">
+                        {renderUserOptions()}
                     </div>
-                ) : (
-                    <button className="nav-btn" onClick={() => navigate("/login")}>Login</button>
-                )
-            )}
+                )}
+            </ul>
         </nav>
     );
 }

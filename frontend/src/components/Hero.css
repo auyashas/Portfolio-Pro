@@ -55,9 +55,10 @@ body {
     font-size: 68px;
 }
 
-.info-text>p {
+.info-text p {
     font-size: 23px;
     color: #8d8d8d;
+    text-align: left;
 }
 
 .service {
@@ -92,10 +93,11 @@ body {
     width: 55px;
 }
 
-.service-card>h3 {
+.service-card h3 {
     font-size: 30px;
     font-weight: 500;
     color: black;
+    border-bottom: none;
 }
 
 .circle {
@@ -105,9 +107,11 @@ body {
     position: absolute;
     z-index: 1;
     background-color: #f2fafa;
-    top: 32px;
+    top: 24px;
     opacity: 90%;
 }
+
+
 @media screen and (max-width:455px) {
     
     .top{

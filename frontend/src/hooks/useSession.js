@@ -11,7 +11,7 @@ export const useSession = () => {
             try {
                 const res = await axios.get('http://localhost:3000/check-session', { withCredentials: true });
                 if (res.data.isLoggedIn) {
-                    setUser({ role: res.data.role });
+                    setUser({ role: res.data.role, id: res.data.id });
                 } else {
                     setUser(null);
                 }
