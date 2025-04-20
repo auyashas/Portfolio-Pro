@@ -1,15 +1,19 @@
 import React from "react";
 import { useLocation, Outlet } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer"; // Make sure the path is correct
 
 const Layout = () => {
     const location = useLocation();
-    const hideNavbarRoutes = ["/login", "/signup", "/register", "/terms"];
+    const hideLayoutRoutes = ["/login", "/signup", "/register", "/terms"];
+
+    const shouldHideLayout = hideLayoutRoutes.includes(location.pathname);
 
     return (
         <>
-            {!hideNavbarRoutes.includes(location.pathname) && <Navbar />}
-            <Outlet /> {/* This will render the child route content */}
+            {!shouldHideLayout && <Navbar />}
+            <Outlet />
+            {!shouldHideLayout && <Footer />}
         </>
     );
 };

@@ -248,6 +248,7 @@ h2 {
 .terms-container p {
     color: #5e5d5d;
     font-size: 23px;
+    text-align: left;
 }
 
 .terms-container p>a {

@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import Footer from '../components/Footer';
 
 const About = () => {
     useEffect(() => {
@@ -73,7 +72,6 @@ const About = () => {
                 </p>
             </div>
 
-            <Footer />
         </>
     );
 };

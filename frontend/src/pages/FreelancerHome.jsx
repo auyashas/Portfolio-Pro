@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import Hero from '../components/Hero'; 
-import Footer from '../components/Footer';
 const FreelancerHome = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -30,7 +29,6 @@ const FreelancerHome = () => {
     return (
         <div>
             <Hero />
-            <Footer />
         </div>
     );
 };

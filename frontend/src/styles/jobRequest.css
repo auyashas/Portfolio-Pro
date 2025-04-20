@@ -1,0 +1,68 @@
+/* src/pages/jobRequest.css */
+
+.job-request-page {
+    background-color: #f0f8ff;
+    padding: 30px;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  .title {
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  
+  .empty-message {
+    font-size: 16px;
+    color: #666;
+  }
+  
+  .job-request-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  
+  .job-card {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    width: 350px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+  }
+  
+  .job-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .job-card p {
+    margin: 8px 0;
+    color: #444;
+  }
+  
+  .status {
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: capitalize;
+  }
+  
+  .status.pending {
+    background-color: #fff4cc;
+    color: #b38f00;
+  }
+  
+  .status.approved {
+    background-color: #d4edda;
+    color: #2f6627;
+  }
+  
+  .status.rejected {
+    background-color: #f8d7da;
+    color: #a71d2a;
+  }
+  

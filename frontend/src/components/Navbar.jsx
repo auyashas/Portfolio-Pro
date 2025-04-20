@@ -41,14 +41,14 @@ export default function Navbar() {
             return (
                 <>
                     {user.id && <Link to={`/freelancer/${user.id}/profile`}>Profile</Link>}
-                    <Link to="/job-applications">Job Applications</Link>
+                    <Link to={`/freelancer/${user.id}/job-requests`}>Job Applications</Link>
                     <button onClick={handleLogout}>Logout</button>
                 </>
             );
         } else if (role === "client") {
             return (
                 <>
-                    <Link to="/job-requests">Job Requests</Link>
+                    <Link to={`/client/${user.id}/job-requests`}>Job Requests</Link>
                     <button onClick={handleLogout}>Logout</button>
                 </>
             );
@@ -73,7 +73,7 @@ export default function Navbar() {
         if (role === 'admin') return '/admin/about';
         if (role === 'freelancer' && user) return `/freelancer/${user.id}/about`;
         if (role === 'client' && user) return `/client/${user.id}/about`;
-        return '/';
+        return '/about';
     };
 
     return (

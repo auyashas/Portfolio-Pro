@@ -26,7 +26,7 @@ const AdminProfile = () => {
     try {
         await axios.post(`http://localhost:3000/admin/application/${profile.id}`, { status: 'approve' });
         alert("Freelancer approved!");
-        window.location.reload();
+        navigate('/admin/applications');
     } catch (err) {
       console.error('Error approving profile:', err);
     }
@@ -36,7 +36,7 @@ const AdminProfile = () => {
     try {
         await axios.post(`http://localhost:3000/admin/application/${profile.id}`, { status: 'reject' });
         alert("Freelancer Account deleted.");
-        navigate('/admin/dashboard'); // Redirect to the admin dashboard after rejection
+        navigate('/admin/applications'); // Redirect to the admin dashboard after rejection
 
     } catch (err) {
       console.error('Error rejecting profile:', err);

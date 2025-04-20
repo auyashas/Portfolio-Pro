@@ -34,7 +34,9 @@ h2 {
     text-align: center;
     border: 1px solid #ddd;
 }
-
+.applications-table:hover{
+    background-color: #f1f1f1;
+  }
 .applications-table th {
     background-color: #2196F3;
     color: white;

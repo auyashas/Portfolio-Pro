@@ -12,8 +12,11 @@ import ClientHome from './pages/ClientHome';
 import AdminHome from './pages/AdminHome';
 import FreelancerApplication from './pages/FreelancerApplication';
 import AdminApplication from './pages/AdminApplication';
+import JobApplications from './pages/JobApplications';
 import AdminProfile from './pages/AdminProfile';
-import AdminDashboard from './pages/AdminDashboard'; // ✅ newly imported
+import ClientFreelancerProfile from './pages/ClientFreelancerProfile';
+import AdminDashboard from './pages/AdminDashboard';
+import JobRequest from './pages/jobRequest';
 import ProtectedRoute from './ProtectedRoute';
 
 function App() {
@@ -88,6 +91,10 @@ function App() {
 
                     <Route path="/freelancer/:id/profile" element={<Profile />} />
                     <Route path="/admin/profile/:id" element={<AdminProfile />} />
+                    <Route path="/client/:id/profile/:freelancerid" element={<ClientFreelancerProfile />} />
+                    <Route path="/client/:id/job-requests" element={<JobRequest />} />
+                    <Route path="/freelancer/:id/job-requests" element={<JobApplications />} />
+
                 </Route>
             </Routes>
         </Router>

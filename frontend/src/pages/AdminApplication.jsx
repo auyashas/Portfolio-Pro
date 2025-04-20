@@ -1,17 +1,19 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "../styles/Applications.css"; // Add a CSS file for styling if needed
+import { Eye } from "lucide-react"; // Eye icon from lucide-react
+import "../styles/Applications.css";
 
 const Applications = () => {
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [processing, setProcessing] = useState(false); // ⬅️ NEW STATE
+    const [processing, setProcessing] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         document.title = "Portfolio-Pro | Applications";
 
-        // Fetch applications from backend
         axios.get("http://localhost:3000/admin/applications")
             .then((response) => {
                 setApplications(response.data);
@@ -25,7 +27,7 @@ const Applications = () => {
     }, []);
 
     const handleApprove = async (id) => {
-        setProcessing(true); // ⬅️ Start loading
+        setProcessing(true);
         try {
             await axios.post(`http://localhost:3000/admin/application/${id}`, { status: 'approve' });
             alert("Freelancer approved!");
@@ -34,12 +36,12 @@ const Applications = () => {
             console.error("Error approving freelancer:", error);
             alert("Failed to approve freelancer.");
         } finally {
-            setProcessing(false); // ⬅️ End loading
+            setProcessing(false);
         }
     };
 
     const handleReject = async (id) => {
-        setProcessing(true); // ⬅️ Start loading
+        setProcessing(true);
         try {
             await axios.post(`http://localhost:3000/admin/application/${id}`, { status: 'reject' });
             alert("Freelancer rejected.");
@@ -48,7 +50,7 @@ const Applications = () => {
             console.error("Error rejecting freelancer:", error);
             alert("Failed to reject freelancer.");
         } finally {
-            setProcessing(false); // ⬅️ End loading
+            setProcessing(false);
         }
     };
 
@@ -73,6 +75,7 @@ const Applications = () => {
                             <th>Skills</th>
                             <th>Experience</th>
                             <th>Resume</th>
+                            <th>Profile</th> {/* 👁️ New Column */}
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -97,19 +100,28 @@ const Applications = () => {
                                     </a>
                                 </td>
                                 <td>
+                                    <button
+                                        className="eye-btn"
+                                        onClick={() => navigate(`/admin/profile/${app.user_id}`)}
+                                        title="View Profile"
+                                    >
+                                        <Eye size={20} />
+                                    </button>
+                                </td>
+                                <td>
                                     {app.status === "Pending" && (
                                         <>
                                             <button
                                                 className="approve-btn"
                                                 onClick={() => handleApprove(app.freelancer_id)}
-                                                disabled={processing} // Disable if processing
+                                                disabled={processing}
                                             >
                                                 Approve
                                             </button>
                                             <button
                                                 className="reject-btn"
                                                 onClick={() => handleReject(app.freelancer_id)}
-                                                disabled={processing} // Disable if processing
+                                                disabled={processing}
                                             >
                                                 Reject
                                             </button>

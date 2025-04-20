@@ -44,6 +44,8 @@ db.getConnection((err, connection) => {
 });
 
 
+
+
 // ✅ Nodemailer Transport
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -376,6 +378,7 @@ app.get('/admin/applications', async (req, res) => {
                 f.profile_pic_path,
                 f.resume_path,
                 f.status,
+                u.id AS user_id,
                 u.first_name,
                 u.last_name,
                 u.email,
@@ -671,8 +674,152 @@ app.get('/admin/profile/:id', async (req, res) => {
     }
 });
 
+app.post('/hire-freelancer', async (req, res) => {
+    const { freelancer_id, job_title, description, client_email, client_contact } = req.body;
 
+    if (!freelancer_id || !job_title || !description || !client_email || !client_contact) {
+        return res.status(400).json({ message: 'All fields are required' });
+    }
 
+    try {
+        // Insert job
+        const [result] = await db.query(
+            `INSERT INTO jobs (freelancer_id, job_title, description, client_email, client_contact)
+             VALUES (?, ?, ?, ?, ?)`,
+            [freelancer_id, job_title, description, client_email, client_contact]
+        );
+
+        // Fetch freelancer's email and full name
+        const [freelancerInfo] = await db.query(
+            `SELECT users.email AS freelancer_email, users.first_name, users.last_name
+             FROM freelancer
+             JOIN users ON freelancer.user_id = users.id
+             WHERE freelancer.id = ?`,
+            [freelancer_id]
+        );
+
+        if (freelancerInfo.length === 0) {
+            return res.status(404).json({ message: 'Freelancer not found' });
+        }
+
+        const { freelancer_email, first_name, last_name } = freelancerInfo[0];
+        const freelancer_fullname = `${first_name} ${last_name}`;
+
+        // Email content
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: freelancer_email,
+            subject: `New Job Application - "${job_title}"`,
+            html: `
+                <p>Hi ${freelancer_fullname},</p>
+                <p>You have received a new job request from a client.</p>
+                <h3>Job Details:</h3>
+                <ul>
+                    <li><strong>Title:</strong> ${job_title}</li>
+                    <li><strong>Description:</strong> ${description}</li>
+                </ul>
+                <h3>Client Contact:</h3>
+                <ul>
+                    <li><strong>Email:</strong> ${client_email}</li>
+                    <li><strong>Phone:</strong> ${client_contact}</li>
+                </ul>
+                <p>Please <a href="http://your-frontend-url.com/login">login</a> to your account to accept or reject this job request.</p>
+                <p>Thank you,<br/>Portfolio Pro Team</p>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        return res.status(201).json({ message: 'Job request submitted and email sent', jobId: result.insertId });
+    } catch (err) {
+        console.error('❌ Error during job request or email sending:', err);
+        return res.status(500).json({ message: 'Server error while processing job request' });
+    }
+});
+
+app.get("/job-requests", async (req, res) => {
+    try {
+        const connection = await db.getConnection();
+
+        const [rows] = await connection.query(`
+            SELECT 
+                j.id AS job_id,
+                CONCAT(u.first_name, ' ', u.last_name) AS freelancer_name,
+                u.email AS freelancer_email,
+                j.job_title,
+                j.status
+            FROM jobs j
+            JOIN freelancer f ON j.freelancer_id = f.id
+            JOIN users u ON f.user_id = u.id
+            WHERE j.client_email = u.email
+        `);
+
+        connection.release();
+        res.json(rows);
+    } catch (error) {
+        console.error("❌ Error fetching job requests:", error);
+        res.status(500).json({ error: "Failed to fetch job requests" });
+    }
+});
+
+app.get('/freelancer/:id/job-requests/:status', async (req, res) => {
+    const userId = req.params.id; // This is the user's id which corresponds to freelancer.user_id
+    const status = req.params.status;
+
+    try {
+        // First, get the freelancer's freelancer.id based on the user_id (freelancer.user_id)
+        const [freelancer] = await db.query(
+            'SELECT id FROM freelancer WHERE user_id = ?' ,
+            [userId]
+        );
+
+        if (freelancer.length === 0) {
+            return res.status(404).json({ message: "Freelancer not found" });
+        }
+
+        const freelancerId = freelancer[0].id;
+
+        // Now, use the freelancer.id to fetch job requests from the jobs table
+        const [rows] = await db.query(
+            `SELECT jobs.id, jobs.job_title, jobs.description, jobs.client_email, jobs.client_contact, jobs.status
+             FROM jobs
+             WHERE jobs.freelancer_id = ? AND status = ?
+             ORDER BY jobs.id`,
+            [freelancerId, status] // Use the freelancer.id here
+        );
+
+        res.json(rows);
+    } catch (err) {
+        console.error("Error fetching job requests:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// ✅ POST: Update job status (Approve/Reject)
+app.post('/freelancer/job-status/:id', async (req, res) => {
+    const jobId = req.params.id;
+    const { status } = req.body;
+
+    if (!["Approved", "Rejected"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+    }
+
+    try {
+        const [result] = await db.query(
+            "UPDATE jobs SET status = ? WHERE id = ?",
+            [status, jobId]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Job not found" });
+        }
+
+        res.json({ message: `Job status updated to ${status}` });
+    } catch (err) {
+        console.error("Error updating job status:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
 
 // ✅ Start server
 app.listen(PORT, () => {
