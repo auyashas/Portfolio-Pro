@@ -4,12 +4,15 @@ import axios from 'axios';
 import { Mail, Phone, MapPin, Globe, X } from 'lucide-react';
 
 const ClientFreelancerProfile = () => {
-  const { freelancerid } = useParams();
+  const { id, freelancerid } = useParams(); // client id and freelancer id from URL
   const [profile, setProfile] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(false); // loading state for form submission
+
   const [formData, setFormData] = useState({
     job_title: '',
     description: '',
+    client_name: '',
     client_email: '',
     client_contact: ''
   });
@@ -18,7 +21,6 @@ const ClientFreelancerProfile = () => {
     const fetchProfile = async () => {
       try {
         const res = await axios.get(`http://localhost:3000/admin/profile/${freelancerid}`);
-        console.log(res.data.id);
         setProfile(res.data);
       } catch (err) {
         console.error('Error fetching profile:', err);
@@ -33,15 +35,20 @@ const ClientFreelancerProfile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       await axios.post('http://localhost:3000/hire-freelancer', {
-        freelancer_id: profile.id,
+        freelancer_id: freelancerid,
+        client_id: id,
+        client_name: formData.client_name,
         ...formData
       });
+
       alert('Hire request sent successfully!');
       setFormData({
         job_title: '',
         description: '',
+        client_name: '',
         client_email: '',
         client_contact: ''
       });
@@ -49,9 +56,10 @@ const ClientFreelancerProfile = () => {
     } catch (err) {
       console.error('Error sending hire request:', err);
       alert('Failed to send hire request.');
+    } finally {
+      setLoading(false);
     }
   };
-  
 
   if (!profile) return <div className="text-center mt-20 text-lg">Loading...</div>;
 
@@ -122,7 +130,6 @@ const ClientFreelancerProfile = () => {
               <Mail size={18} /> Hire Freelancer
             </button>
           </div>
-
         </div>
       </div>
 
@@ -132,10 +139,17 @@ const ClientFreelancerProfile = () => {
             onSubmit={handleSubmit}
             className="bg-white p-6 rounded-xl shadow-md w-full max-w-md space-y-4 relative"
           >
+            {loading && (
+              <div className="absolute top-0 left-0 w-full h-full bg-white/60 rounded-xl flex items-center justify-center z-10">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-indigo-600 border-solid"></div>
+              </div>
+            )}
+
             <button
               type="button"
-              onClick={() => setShowForm(false)}
+              onClick={() => !loading && setShowForm(false)}
               className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+              disabled={loading}
             >
               <X size={20} />
             </button>
@@ -162,6 +176,16 @@ const ClientFreelancerProfile = () => {
             />
 
             <input
+              type="text"
+              name="client_name"
+              value={formData.client_name}
+              onChange={handleInputChange}
+              placeholder="Your Name"
+              required
+              className="w-full px-4 py-2 border rounded"
+            />
+
+            <input
               type="email"
               name="client_email"
               value={formData.client_email}
@@ -183,9 +207,12 @@ const ClientFreelancerProfile = () => {
 
             <button
               type="submit"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded w-full"
+              disabled={loading}
+              className={`bg-indigo-600 text-white px-4 py-2 rounded w-full ${
+                loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-indigo-700'
+              }`}
             >
-              Send Request
+              {loading ? 'Sending Request...' : 'Send Request'}
             </button>
           </form>
         </div>

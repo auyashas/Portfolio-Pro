@@ -70,6 +70,7 @@ const JobApplications = () => {
                             <th>Job ID</th>
                             <th>Job Title</th>
                             <th>Description</th>
+                            <th>Client Name</th>
                             <th>Client Email</th>
                             <th>Status</th>
                             <th>Action</th>
@@ -81,6 +82,7 @@ const JobApplications = () => {
                                 <td>{job.id}</td>
                                 <td>{job.job_title}</td>
                                 <td>{job.description}</td>
+                                <td>{job.client_name}</td>
                                 <td>{job.client_email}</td>
                                 <td>{job.status}</td>
                                 <td>
@@ -116,6 +118,7 @@ const JobApplications = () => {
                             <th>Job ID</th>
                             <th>Job Title</th>
                             <th>Description</th>
+                            <th>Client Name</th>
                             <th>Client Email</th>
                             <th>Client Contact</th>
                         </tr>
@@ -126,6 +129,7 @@ const JobApplications = () => {
                                 <td>{job.id}</td>
                                 <td>{job.job_title}</td>
                                 <td>{job.description}</td>
+                                <td>{job.client_name}</td>
                                 <td>{job.client_email}</td>
                                 <td>{job.client_contact}</td>
                             </tr>
@@ -145,6 +149,7 @@ const JobApplications = () => {
                             <th>Job ID</th>
                             <th>Job Title</th>
                             <th>Description</th>
+                            <th>Client Name</th>
                             <th>Client Email</th>
                             <th>Client Contact</th>
                         </tr>
@@ -155,6 +160,7 @@ const JobApplications = () => {
                                 <td>{job.id}</td>
                                 <td>{job.job_title}</td>
                                 <td>{job.description}</td>
+                                <td>{job.client_name}</td>
                                 <td>{job.client_email}</td>
                                 <td>{job.client_contact}</td>
                             </tr>

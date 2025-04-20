@@ -1,15 +1,17 @@
 // src/pages/jobRequest.jsx
 import React, { useEffect, useState } from 'react';
+import { useParams } from "react-router-dom";
 import axios from 'axios';
 import '../styles/jobRequest.css';
 
 const JobRequest = () => {
+  const { id } = useParams();
   const [jobRequests, setJobRequests] = useState([]);
 
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const res = await axios.get('http://localhost:3000/job-requests', {
+        const res = await axios.get(`http://localhost:3000/job-requests/${id}`, {
           withCredentials: true,
         });
         setJobRequests(res.data);

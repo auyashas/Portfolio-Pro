@@ -675,26 +675,18 @@ app.get('/admin/profile/:id', async (req, res) => {
 });
 
 app.post('/hire-freelancer', async (req, res) => {
-    const { freelancer_id, job_title, description, client_email, client_contact } = req.body;
+    const { freelancer_id, job_title, description, client_id, client_name, client_email, client_contact } = req.body;
 
-    if (!freelancer_id || !job_title || !description || !client_email || !client_contact) {
+    if (!freelancer_id || !job_title || !description || !client_id || !client_name || !client_email || !client_contact) {
         return res.status(400).json({ message: 'All fields are required' });
     }
 
     try {
-        // Insert job
-        const [result] = await db.query(
-            `INSERT INTO jobs (freelancer_id, job_title, description, client_email, client_contact)
-             VALUES (?, ?, ?, ?, ?)`,
-            [freelancer_id, job_title, description, client_email, client_contact]
-        );
-
-        // Fetch freelancer's email and full name
+        // Retrieve the freelancer ID from the user_id
         const [freelancerInfo] = await db.query(
-            `SELECT users.email AS freelancer_email, users.first_name, users.last_name
+            `SELECT freelancer.id AS freelancer_id
              FROM freelancer
-             JOIN users ON freelancer.user_id = users.id
-             WHERE freelancer.id = ?`,
+             WHERE freelancer.user_id = ?`,
             [freelancer_id]
         );
 
@@ -702,7 +694,29 @@ app.post('/hire-freelancer', async (req, res) => {
             return res.status(404).json({ message: 'Freelancer not found' });
         }
 
-        const { freelancer_email, first_name, last_name } = freelancerInfo[0];
+        const fid = freelancerInfo[0].freelancer_id;
+        
+        // Insert job with the freelancer_id
+        const [result] = await db.query(
+            `INSERT INTO jobs (freelancer_id, job_title, description, client_id, client_name, client_email, client_contact)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [fid, job_title, description, client_id, client_name, client_email, client_contact]
+        );
+
+        // Fetch freelancer's email and full name
+        const [freelancerDetails] = await db.query(
+            `SELECT users.email AS freelancer_email, users.first_name, users.last_name
+             FROM freelancer
+             JOIN users ON freelancer.user_id = users.id
+             WHERE freelancer.id = ?`,
+            [fid]
+        );
+
+        if (freelancerDetails.length === 0) {
+            return res.status(404).json({ message: 'Freelancer details not found' });
+        }
+
+        const { freelancer_email, first_name, last_name } = freelancerDetails[0];
         const freelancer_fullname = `${first_name} ${last_name}`;
 
         // Email content
@@ -720,10 +734,11 @@ app.post('/hire-freelancer', async (req, res) => {
                 </ul>
                 <h3>Client Contact:</h3>
                 <ul>
+                    <li><strong>Name:</strong> ${client_name}</li>
                     <li><strong>Email:</strong> ${client_email}</li>
                     <li><strong>Phone:</strong> ${client_contact}</li>
                 </ul>
-                <p>Please <a href="http://your-frontend-url.com/login">login</a> to your account to accept or reject this job request.</p>
+                <p>Please login to your account to accept or reject this job request.</p>
                 <p>Thank you,<br/>Portfolio Pro Team</p>
             `
         };
@@ -737,8 +752,12 @@ app.post('/hire-freelancer', async (req, res) => {
     }
 });
 
-app.get("/job-requests", async (req, res) => {
+
+
+app.get("/job-requests/:id", async (req, res) => {
+    const client_id=req.params.id;
     try {
+        console.log(client_id);
         const connection = await db.getConnection();
 
         const [rows] = await connection.query(`
@@ -751,8 +770,8 @@ app.get("/job-requests", async (req, res) => {
             FROM jobs j
             JOIN freelancer f ON j.freelancer_id = f.id
             JOIN users u ON f.user_id = u.id
-            WHERE j.client_email = u.email
-        `);
+            WHERE j.client_id = ?`,
+        [client_id]);
 
         connection.release();
         res.json(rows);
@@ -781,12 +800,13 @@ app.get('/freelancer/:id/job-requests/:status', async (req, res) => {
 
         // Now, use the freelancer.id to fetch job requests from the jobs table
         const [rows] = await db.query(
-            `SELECT jobs.id, jobs.job_title, jobs.description, jobs.client_email, jobs.client_contact, jobs.status
+            `SELECT jobs.id, jobs.job_title, jobs.description, jobs.client_name, jobs.client_email, jobs.client_contact, jobs.status
              FROM jobs
              WHERE jobs.freelancer_id = ? AND status = ?
              ORDER BY jobs.id`,
             [freelancerId, status] // Use the freelancer.id here
         );
+
 
         res.json(rows);
     } catch (err) {
@@ -813,7 +833,38 @@ app.post('/freelancer/job-status/:id', async (req, res) => {
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Job not found" });
         }
+        const [client] = await db.query(
+            'SELECT id,client_name,client_email FROM jobs WHERE id = ?' ,
+            [jobId]
+        );
+        if (client.length === 0) {
+            return res.status(404).json({ message: "Client not found" });
+        }
+        const clientEmail = client[0].client_email;
+        const clientName = client[0].client_name;
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: clientEmail,
+            subject: `Your Freelancer Application has been ${status}`,
+            html: status==='Approver'?`
+                <p>Hi ${clientName},</p>
+                <p>Your job request of id ${id} has been successfully accepted by the freelancer. Thank you for using our platform.</p>
+                <p>Thank you,<br/>Portfolio Pro Team</p>
+            `:
+            `
+                <p>Hi ${clientName},</p>
+                <p>Your job request of id ${id} has been declined by the freelancer. We appreciate your interest in our platform and encourage you to explore other talented freelancers for your projects.</p>
+                <p>Thank you,<br/>Portfolio Pro Team</p>
+            `
+        };
 
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error('Email sending failed:', error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
         res.json({ message: `Job status updated to ${status}` });
     } catch (err) {
         console.error("Error updating job status:", err);
