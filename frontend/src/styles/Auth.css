@@ -479,6 +479,15 @@ textarea.input-field {
     width: 40%;
 }
 
+.form-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+    padding: 10px;
+    border-radius: 6px;
+    margin: 20px 0;
+    font-size: 14px;
+}
 
 @keyframes spin {
     0% {

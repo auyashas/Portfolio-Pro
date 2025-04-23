@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useEffect,useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/Applications.css";
 
@@ -11,12 +11,29 @@ const JobApplications = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [processing, setProcessing] = useState(false);
+    const hasCheckedProfile = useRef(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         document.title = "Portfolio-Pro | Job Requests";
+        if (hasCheckedProfile.current) return;
+        hasCheckedProfile.current = true;
 
         const fetchJobs = async () => {
             try {
+                const checkProfile = async () => {
+                    try {
+                        const response = await axios.get(`http://localhost:3000/freelancer/check/${freelancerId}`);
+                        if (!response.data.exists) {
+                            alert("Please complete your profile to continue.");
+                            navigate(`/freelancer/${freelancerId}/freelancer-application`);
+                        }
+                    } catch (error) {
+                        console.error("Error checking freelancer profile:", error);
+                    }
+                };
+        
+                checkProfile();
                 const [pending, accepted, rejected] = await Promise.all([
                     axios.get(`http://localhost:3000/freelancer/${freelancerId}/job-requests/Pending`),
                     axios.get(`http://localhost:3000/freelancer/${freelancerId}/job-requests/Approved`),

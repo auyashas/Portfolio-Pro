@@ -1,18 +1,17 @@
 // src/pages/admin/AdminProfile.jsx
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom'; // Use useNavigate
+import { useParams } from 'react-router-dom'; // Use useNavigate
 import axios from 'axios';
 import '../styles/Profile.css';
 
 const AdminProfile = () => {
-  const { id } = useParams(); // This is the freelancer ID
-  const navigate = useNavigate(); // Use useNavigate for routing
+  const { freelancerid } = useParams(); // This is the freelancer ID
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get(`http://localhost:3000/admin/profile/${id}`);
+        const res = await axios.get(`http://localhost:3000/admin/profile/${freelancerid}`);
         setProfile(res.data);
       } catch (err) {
         console.error('Error fetching profile:', err);
@@ -20,38 +19,8 @@ const AdminProfile = () => {
     };
 
     fetchProfile();
-  }, [id]);
+  }, [freelancerid]);
 
-  const handleApprove = async () => {
-    try {
-        await axios.post(`http://localhost:3000/admin/application/${profile.id}`, { status: 'approve' });
-        alert("Freelancer approved!");
-        navigate('/admin/applications');
-    } catch (err) {
-      console.error('Error approving profile:', err);
-    }
-  };
-
-  const handleReject = async () => {
-    try {
-        await axios.post(`http://localhost:3000/admin/application/${profile.id}`, { status: 'reject' });
-        alert("Freelancer Account deleted.");
-        navigate('/admin/applications'); // Redirect to the admin dashboard after rejection
-
-    } catch (err) {
-      console.error('Error rejecting profile:', err);
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      const res = await axios.delete(`http://localhost:3000/admin/profile/${id}`);
-      alert(res.data.message);
-      navigate('/admin/dashboard'); // Redirect to the admin dashboard after deletion
-    } catch (err) {
-      console.error('Error deleting profile:', err);
-    }
-  };
 
   if (!profile) return <div className="text-center mt-20 text-lg">Loading...</div>;
 
@@ -118,33 +87,6 @@ const AdminProfile = () => {
                     Download Resume
                   </a>
                 </p>
-              )}
-
-              {profile.status === 'Pending' && (
-                <div className="mt-4 flex space-x-4">
-                  <button
-                    onClick={handleApprove}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={handleReject}
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                  >
-                    Reject
-                  </button>
-                </div>
-              )}
-              {profile.status === 'Approved' && (
-                <div className="mt-4">
-                  <button
-                    onClick={handleDelete}
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                  >
-                    Delete Profile
-                  </button>
-                </div>
               )}
             </div>
           </div>

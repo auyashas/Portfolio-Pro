@@ -1,0 +1,93 @@
+/* src/styles/allFreelancers.css */
+
+.freelancer-page {
+    background-color: #f2f9ff;
+    padding: 30px;
+    min-height: auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  .title {
+    font-size: 30px;
+    font-weight: bold;
+    color: #1b79cc;
+    margin-bottom: 25px;
+  }
+  
+  .loading,
+  .empty-message {
+    font-size: 16px;
+    color: #555;
+  }
+  
+  .freelancer-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  
+  .freelancer-card {
+    background-color: #fff;
+    border-radius: 15px;
+    padding: 20px;
+    width: 300px;
+    height: 470px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease-in-out;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0px;
+    align-items: center;
+  }
+  
+  .freelancer-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .freelancer-img {
+    width: 220px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 10%;
+  }
+  
+  .freelancer-name a {
+    font-size: 20px;
+    font-weight: 600;
+    color: #0077cc;
+    text-decoration: none;
+  }
+  
+  .freelancer-name a:hover {
+    text-decoration: underline;
+  }
+  
+  .freelancer-title {
+    font-size: 16px;
+    color: #555;
+    margin: 8px 0;
+  }
+  
+  .freelancer-card p {
+    font-size: 14px;
+    color: #444;
+    margin: 6px 0;
+  }
+  
+  .view-btn {
+    margin-top: 12px;
+    background-color: #007bff;
+    color: white;
+    padding: 8px 18px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+  }
+  
+  .view-btn:hover {
+    background-color: #0056b3;
+  }
+  

@@ -110,6 +110,24 @@ body {
     top: 24px;
     opacity: 90%;
 }
+.hire-btn {
+    margin-top: 20px;
+    background-color: #007bff;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    width: 250px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.hire-btn:hover {
+    background-color: #0056b3;
+}
 
 
 @media screen and (max-width:455px) {

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useState,useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import '../styles/Profile.css';
 
@@ -8,8 +8,25 @@ const Profile = () => {
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [updatedProfile, setUpdatedProfile] = useState({});
+  const hasCheckedProfile = useRef(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
+    if (hasCheckedProfile.current) return;
+        hasCheckedProfile.current = true;
+        const checkProfile = async () => {
+          try {
+              const response = await axios.get(`http://localhost:3000/freelancer/check/${id}`);
+              if (!response.data.exists) {
+                  alert("Please complete your profile to continue.");
+                  navigate(`/freelancer/${id}/freelancer-application`);
+              }
+          } catch (error) {
+              console.error("Error checking freelancer profile:", error);
+          }
+      };
+
+      checkProfile();
     const fetchProfile = async () => {
       try {
         const res = await axios.get(`http://localhost:3000/profile/${id}`);
@@ -49,7 +66,7 @@ const Profile = () => {
   return (
     <div className="flex justify-center p-10 min-h-screen">
       <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-5xl flex gap-8">
-        
+
         {/* Profile Picture */}
         <div className="w-1/3 flex justify-center items-start">
           <img
@@ -127,6 +144,13 @@ const Profile = () => {
                         onChange={handleInputChange}
                         className="w-2/3 px-4 py-2 border border-gray-300 rounded mt-2"
                         placeholder="Contact"
+                        inputMode="numeric"
+                        pattern="\d*"
+                        onInput={(e) => {
+                          e.target.value = e.target.value.replace(/\D/g, '');
+                        }}
+                        maxLength={10}
+                        minLength={10}
                       />
                     </div>
                     <div className="flex items-center">
@@ -202,7 +226,9 @@ const Profile = () => {
               {profile.resume_path && (
                 <p>
                   <a
-                    href={`http://localhost:3000/${profile.resume_path}`}
+                    href={`http://localhost:3000/download-resume/${profile.resume_path.replace(/\\/g, '/').split('/').pop()}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     download
                     className="inline-block mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
                   >
@@ -214,7 +240,7 @@ const Profile = () => {
           </div>
         </div>
       </div>
-      
+
     </div>
   );
 };

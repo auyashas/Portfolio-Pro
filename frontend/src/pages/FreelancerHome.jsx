@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import Hero from '../components/Hero'; 
+import Hero from '../components/Hero';
 const FreelancerHome = () => {
     const { id } = useParams();
     const navigate = useNavigate();

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/Auth.css';
-import Footer from '../components/Footer';
 import defaultProfilePic from '../assets/user.png';
 import editIcon from '../assets/edit_icon.png';
 
@@ -103,7 +102,6 @@ const FreelancerApplication = () => {
                 <div className="auth-header">
                     <header>Freelancer Application</header>
                 </div>
-
                 <form onSubmit={handleSubmit}>
                     <div className="profile-container">
                         <img src={profilePreview} alt="Profile Preview" className="profile-preview" />
@@ -128,22 +126,23 @@ const FreelancerApplication = () => {
                             className="input-field"
                             required
                         >
-                            <option value="" disabled>Select your field*</option>
-                            <option value="Web Development">Web Development</option>
-                            <option value="Mobile App Development">Mobile App Development</option>
-                            <option value="UI/UX Design">UI/UX Design</option>
-                            <option value="Data Analysis">Data Analysis</option>
-                            <option value="Digital Marketing">Digital Marketing</option>
-                            <option value="Graphic Design">Graphic Design</option>
-                            <option value="Content Writing">Content Writing</option>
-                            <option value="Video Editing">Video Editing</option>
-                            <option value="SEO Optimization">SEO Optimization</option>
-                            <option value="Cybersecurity">Cybersecurity</option>
-                            <option value="Cloud Computing">Cloud Computing</option>
-                            <option value="DevOps">DevOps</option>
-                            <option value="Game Development">Game Development</option>
-                            <option value="Software Testing">Software Testing</option>
-                            <option value="IT Support">IT Support</option>
+                            <option value="" disabled>Select your job role*</option>
+                            <option value="Web Developer">Web Developer</option>
+                            <option value="Mobile App Developer">Mobile App Developer</option>
+                            <option value="UI/UX Designer">UI/UX Designer</option>
+                            <option value="Data Analyst">Data Analyst</option>
+                            <option value="Digital Marketer">Digital Marketer</option>
+                            <option value="Graphic Designer">Graphic Designer</option>
+                            <option value="Content Writer">Content Writer</option>
+                            <option value="Video Editor">Video Editor</option>
+                            <option value="SEO Specialist">SEO Specialist</option>
+                            <option value="Cybersecurity Specialist">Cybersecurity Specialist</option>
+                            <option value="Cloud Engineer">Cloud Engineer</option>
+                            <option value="DevOps Engineer">DevOps Engineer</option>
+                            <option value="Game Developer">Game Developer</option>
+                            <option value="Software Tester">Software Tester</option>
+                            <option value="IT Support Specialist">IT Support Specialist</option>
+
                         </select>
 
                         <textarea
@@ -212,16 +211,18 @@ const FreelancerApplication = () => {
                             <p>By signing in, you agree to our <Link to="/terms">Terms & Conditions</Link>.</p>
                         </div>
                     </label>
-
                     <div className="input-submit load">
                         <button className="submit-btn" disabled={isLoading}>
                             {isLoading ? "Registering..." : "Register"}
                         </button>
                         {isLoading && <div className="spinner"></div>}
                     </div>
+                    <div className="form-warning">
+                        ⚠️ <strong>Note:</strong> The following fields cannot be changed once submitted:
+                        <span style={{ color: 'darkred' }}> Title, Skills, Resume, and Experience.</span>
+                    </div>
                 </form>
             </div>
-            <Footer/>
         </div>
     );
 };

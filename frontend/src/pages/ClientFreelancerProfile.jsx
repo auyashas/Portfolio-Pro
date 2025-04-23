@@ -78,11 +78,15 @@ const ClientFreelancerProfile = () => {
           <h2 className="text-3xl font-bold text-gray-800">{profile.first_name} {profile.last_name}</h2>
 
           <div className="border-b pb-4">
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">Personal Details</h3>
-            <div className="text-gray-600 space-y-2">
-              <p className="flex items-center gap-2"><Mail size={18} /> {profile.email}</p>
-              <p className="flex items-center gap-2"><Phone size={18} /> {profile.contact}</p>
-              <p className="flex items-center gap-2"><MapPin size={18} /> {profile.city}, {profile.country}</p>
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-semibold text-gray-700">Personal Details</h3>
+            </div>
+            <div className="mt-2 text-gray-600 space-y-1">
+              <p><strong>Bio:</strong> {profile.bio}</p>
+              <p><strong>Email:</strong> {profile.email}</p>
+              <p><strong>Contact:</strong> {profile.contact}</p>
+              <p><strong>City:</strong> {profile.city}</p>
+              <p><strong>Country:</strong> {profile.country}</p>
             </div>
           </div>
 
@@ -113,7 +117,9 @@ const ClientFreelancerProfile = () => {
           {profile.resume_path && (
             <div>
               <a
-                href={`http://localhost:3000/${profile.resume_path}`}
+                href={`http://localhost:3000/download-resume/${profile.resume_path.replace(/\\/g, '/').split('/').pop()}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 download
                 className="inline-block mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
               >

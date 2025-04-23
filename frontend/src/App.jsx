@@ -15,9 +15,12 @@ import AdminApplication from './pages/AdminApplication';
 import JobApplications from './pages/JobApplications';
 import AdminProfile from './pages/AdminProfile';
 import ClientFreelancerProfile from './pages/ClientFreelancerProfile';
+import FreelancerProfile from './pages/FreelancerProfile';
 import AdminDashboard from './pages/AdminDashboard';
+import AllFreelancers from './pages/AllFreelancers';
 import JobRequest from './pages/jobRequest';
 import ProtectedRoute from './ProtectedRoute';
+import ForgotPassword from './pages/ForgotPassword';
 
 function App() {
     return (
@@ -30,6 +33,7 @@ function App() {
                     <Route path="signup" element={<Signup />} />
                     <Route path="terms" element={<Terms />} />
                     <Route path="register" element={<Register />} />
+                    <Route path="/password-reset" element={<ForgotPassword />} />
                     <Route path="about" element={<About />} />
                     <Route path="admin/about" element={<About />} />
                     <Route path="freelancer/:id/about" element={<About />} />
@@ -92,9 +96,12 @@ function App() {
                     <Route path="/freelancer/:id/profile" element={<Profile />} />
                     <Route path="/admin/profile/:id" element={<AdminProfile />} />
                     <Route path="/client/:id/profile/:freelancerid" element={<ClientFreelancerProfile />} />
+                    <Route path="/freelancer/:id/profile/:freelancerid" element={<FreelancerProfile />} />
                     <Route path="/client/:id/job-requests" element={<JobRequest />} />
                     <Route path="/freelancer/:id/job-requests" element={<JobApplications />} />
-
+                    <Route path="/client/:id/all" element={<AllFreelancers />} />
+                    <Route path="/freelancer/:id/all" element={<AllFreelancers />} />
+                    <Route path="/admin/all" element={<AllFreelancers />} />    
                 </Route>
             </Routes>
         </Router>

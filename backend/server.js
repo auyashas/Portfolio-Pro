@@ -65,8 +65,20 @@ app.post('/check-email', async (req, res) => {
     if (!email) return res.status(400).json({ success: false, message: 'Email is required' });
 
     try {
-        const [rows] = await db.query('SELECT email FROM users WHERE email = ?', [email]);
-        return res.json({ exists: rows.length > 0 });
+        const [rows] = await db.query('SELECT id, email FROM users WHERE email = ?', [email]);
+        
+        if (rows.length > 0) {
+            return res.json({
+                exists: true,
+                userId: rows[0].id,
+                message: 'User found'
+            });
+        } else {
+            return res.json({
+                exists: false,
+                message: 'User not found'
+            });
+        }
     } catch (err) {
         console.error('Error checking email:', err);
         return res.status(500).json({ success: false, message: 'Server error' });
@@ -183,6 +195,7 @@ app.post('/register', async (req, res) => {
 });
 
 
+
 // ✅ Login
 // ✅ Login Route
 // ✅ Login Route with HttpOnly cookie
@@ -232,7 +245,35 @@ app.post('/login', async (req, res) => {
     }
 });
 
+app.put('/password/:id', async (req, res) => {
+    const { id } = req.params;
+    const { password } = req.body;
 
+    if ( !password) {
+        return res.status(400).json({ success: false, message: "Email and password are required." });
+    }
+
+    try {
+        // Hash the new password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Run the update query
+        const [result] = await db.query(
+            "UPDATE users SET password = ? WHERE id = ?",
+            [hashedPassword, id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: "No user found with this email." });
+        }
+
+        res.json({ success: true, message: "Password updated successfully." });
+
+    } catch (err) {
+        console.error("Error updating password:", err);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
 
 app.get('/check-session', (req, res) => {
     const sessionCookie = req.cookies.user_session;
@@ -422,23 +463,38 @@ app.post('/admin/application/:id', async (req, res) => {
             return res.status(404).json({ message: "Freelancer not found" });
         }
 
+        // Fetch user info before making DB changes
         const { email, first_name, last_name } = userResult[0];
-
+        const [clients] = await db.query(
+            "select * from jobs where freelancer_id = ?",
+            [id]
+        );
+        
+        for (let i = 0; i < clients.length; i++) {
+            const { client_email, client_name } = clients[i];
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: client_email,
+                subject: `Freelancer Account Update`,
+                text: `Dear ${client_name},\n\nWe regret to inform you that the freelancer ${first_name} ${last_name} associated with your job has had their account blocked or deleted. We apologize for any inconvenience this may have caused.\n\nIf you need further assistance or wish to contact the freelancer directly, please feel free to do so. Freelancer email:${email}\n\nThank you for your understanding.\n\nBest regards,\nPortfolio Pro Team`
+            };
+            
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.error('Email sending failed:', error);
+                } else {
+                    console.log('Email sent: ' + info.response);
+                }
+            });
+        }
+        
         // Update or delete from freelancer table
         if (status === 'approve') {
             await db.query("UPDATE freelancer SET status = ? WHERE id = ?", [newStatus, id]);
         } else {
+            await db.query("DELETE FROM jobs WHERE freelancer_id = ?", [id]);
             await db.query("DELETE FROM freelancer WHERE id = ?", [id]);
         }
-
-        // Setup Nodemailer
-        let transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
-        });
 
         const mailOptions = {
             from: process.env.EMAIL_USER,
@@ -456,6 +512,8 @@ app.post('/admin/application/:id', async (req, res) => {
                 console.log('Email sent: ' + info.response);
             }
         });
+
+
 
         res.json({ message: `Freelancer ${newStatus}` });
 
@@ -695,7 +753,7 @@ app.post('/hire-freelancer', async (req, res) => {
         }
 
         const fid = freelancerInfo[0].freelancer_id;
-        
+
         // Insert job with the freelancer_id
         const [result] = await db.query(
             `INSERT INTO jobs (freelancer_id, job_title, description, client_id, client_name, client_email, client_contact)
@@ -755,7 +813,7 @@ app.post('/hire-freelancer', async (req, res) => {
 
 
 app.get("/job-requests/:id", async (req, res) => {
-    const client_id=req.params.id;
+    const client_id = req.params.id;
     try {
         console.log(client_id);
         const connection = await db.getConnection();
@@ -771,7 +829,7 @@ app.get("/job-requests/:id", async (req, res) => {
             JOIN freelancer f ON j.freelancer_id = f.id
             JOIN users u ON f.user_id = u.id
             WHERE j.client_id = ?`,
-        [client_id]);
+            [client_id]);
 
         connection.release();
         res.json(rows);
@@ -788,7 +846,7 @@ app.get('/freelancer/:id/job-requests/:status', async (req, res) => {
     try {
         // First, get the freelancer's freelancer.id based on the user_id (freelancer.user_id)
         const [freelancer] = await db.query(
-            'SELECT id FROM freelancer WHERE user_id = ?' ,
+            'SELECT id FROM freelancer WHERE user_id = ?',
             [userId]
         );
 
@@ -834,7 +892,7 @@ app.post('/freelancer/job-status/:id', async (req, res) => {
             return res.status(404).json({ message: "Job not found" });
         }
         const [client] = await db.query(
-            'SELECT id,client_name,client_email FROM jobs WHERE id = ?' ,
+            'SELECT id,client_name,client_email FROM jobs WHERE id = ?',
             [jobId]
         );
         if (client.length === 0) {
@@ -846,14 +904,14 @@ app.post('/freelancer/job-status/:id', async (req, res) => {
             from: process.env.EMAIL_USER,
             to: clientEmail,
             subject: `Your Freelancer Application has been ${status}`,
-            html: status==='Approver'?`
+            html: status === 'Approved' ? `
                 <p>Hi ${clientName},</p>
-                <p>Your job request of id ${id} has been successfully accepted by the freelancer. Thank you for using our platform.</p>
+                <p>Your job request of id ${jobId} has been successfully accepted by the freelancer. Thank you for using our platform.</p>
                 <p>Thank you,<br/>Portfolio Pro Team</p>
             `:
-            `
+                `
                 <p>Hi ${clientName},</p>
-                <p>Your job request of id ${id} has been declined by the freelancer. We appreciate your interest in our platform and encourage you to explore other talented freelancers for your projects.</p>
+                <p>Your job request of id ${jobId} has been declined by the freelancer. We appreciate your interest in our platform and encourage you to explore other talented freelancers for your projects.</p>
                 <p>Thank you,<br/>Portfolio Pro Team</p>
             `
         };
@@ -871,6 +929,31 @@ app.post('/freelancer/job-status/:id', async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 });
+
+app.get("/freelancers/approved", async (req, res) => {
+    try {
+        const [freelancers] = await db.query(`
+        SELECT 
+          f.id AS freelancer_id,
+          f.user_id,
+          f.title,
+          f.skills,
+          f.experience,
+          f.profile_pic_path,
+          u.first_name,
+          u.last_name
+        FROM freelancer f
+        JOIN users u ON f.user_id = u.id
+        WHERE f.status = 'Approved'
+      `);
+
+        res.json(freelancers);
+    } catch (error) {
+        console.error("Error fetching approved freelancers:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
 
 // ✅ Start server
 app.listen(PORT, () => {

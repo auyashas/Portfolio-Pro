@@ -84,7 +84,7 @@ const Login = () => {
                 {error && <p className="error-msg">{error}</p>}
 
                 <div className="forgot">
-                    <section><a href="#">Forgot Password</a></section>
+                    <section><a href="/password-reset">Forgot Password</a></section>
                 </div>
 
                 <div className="input-submit">

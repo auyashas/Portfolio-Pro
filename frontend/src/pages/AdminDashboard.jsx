@@ -61,7 +61,7 @@ const AdminDashboard = () => {
             <table className="dashboard-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th>User ID</th>
                         <th>Name</th>
                         <th>Title</th>
                         <th>Skills</th>
@@ -73,14 +73,17 @@ const AdminDashboard = () => {
                 <tbody>
                     {freelancers.map(f => (
                         <tr key={f.id}>
-                            <td>{f.id}</td>
+                            <td>{f.user_id}</td>
                             <td>{f.first_name} {f.last_name}</td>
                             <td>{f.title}</td>
                             <td>{f.skills}</td>
                             <td>{f.status}</td>
                             <td>
                                 {f.resume_path ? (
-                                    <a href={`http://localhost:3000/${f.resume_path}`} target="_blank" rel="noopener noreferrer">
+                                    <a href={`http://localhost:3000/download-resume/${f.resume_path.replace(/\\/g, '/').split('/').pop()}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download>
                                         Download
                                     </a>
                                 ) : 'N/A'}
@@ -97,7 +100,7 @@ const AdminDashboard = () => {
             <table className="dashboard-table">
                 <thead>
                     <tr>
-                        <th>ID</th><th>Email</th><th>First Name</th><th>Last Name</th><th>Contact</th><th>City</th>
+                        <th>User ID</th><th>Email</th><th>First Name</th><th>Last Name</th><th>Contact</th><th>City</th>
                     </tr>
                 </thead>
                 <tbody>
