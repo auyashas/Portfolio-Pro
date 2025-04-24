@@ -1,107 +1,360 @@
-body {
-    margin-top: 20px;
-    padding: 0;
-    font-family: 'Roboto', sans-serif;
-    background: #fdfdfd;
-}
-
-.profile-header>img {
-    width: 125px;
-}
-
-.freelancer-container {
-    width: 100vw;
-    height: 100vh;
-}
-
-.profile-left {
+.profile-containr {
     display: flex;
     justify-content: center;
+    padding: 80px;
+    min-height: 80vh;
+    background-color: #f9f9f9;
 }
 
-.profile-left>img {
-    box-shadow: 0px 5px 10px 1px rgba(0, 0, 0, 0.1);
-    margin-top: 20px;
-    width: 60%;
-    height: 60%;
+.profile-card {
+    background: white;
+    padding: 32px;
+    border-radius: 16px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    gap: 32px;
+}
+
+.profile-pic-wrapper {
+    width: 33%;
+    display: flex;
+    justify-content: center;
+    transition: 0.3s ease;
+}
+
+.profile-pic-wrapper:hover {
+    transform: scale(1.05);
+}
+.profile-pic {
+    width: 295px;
+    height: 330px;
     object-fit: cover;
     border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    position: relative;
+    top: 20%;
 }
 
-.profile-left {
-    width: 35%;
+.profile-details {
+    width: 67%;
 }
 
-.profile-right {
-    width: 65%;
-    height: 100%;
-    background-color: #f2fafa;
-    padding: 10px 20px;
+.profile-details h2 {
+    color: #3b82f6;
+    font-weight: bold;
+    font-size: 1.25rem;
+    font-size: 32px;
+}
+
+.section-header h3 {
+    color: #0b7dda;
+    /* Tailwind's blue-500 */
+    font-weight: 600;
+    font-size: 22px;
+    border-bottom: none;
+}
+
+.profile-name {
+    font-size: 28px;
+    font-weight: bold;
+    color: #2d2d2d;
+    margin-bottom: 20px;
+}
+
+.section {
+    margin-top: 20px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 20px;
+}
+
+.section-header {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid #2197F3;
 }
 
-.profile-right>h3,.profile-right>h4 {
-    text-align: left;
-    margin-top: 65px;
-    color: #1b79cc;
-    font-size: 55px;
+.detail-heading{
     font-weight: 600;
 }
-
-.profile-right>h4 {
-    margin-top: 35px;
-    font-size: 30px;
-    font-weight: 400;
-}
-
-p {
-    color: #5e5d5d;
-    font-size: 20px;
-}
-
-.profile-right a {
+.blue{
     transition: .3s ease;
+
 }
-.profile-right a:hover {
-    color: #00acff;
+.blue:hover{
+    color: #3b82f6;
+    text-decoration: none;
 }
 
-.resume-btn {
-    height: 46px;
-    width: 225px;
-    border-radius: 12px;
-    font-size: 21px;
-    background: #1e88e5;
+.section-body {
+    margin-top: 10px;
+    color: #555;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.edit-btn,
+.save-btn,
+.download-resume-btn {
+    background-color: #3b82f6;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 14px;
+}
+
+.edit-btn:hover {
+    background-color: #2563eb;
+}
+
+.save-btn {
+    background-color: #16a34a;
+    margin-top: 16px;
+}
+
+.save-btn:hover {
+    background-color: #15803d;
+}
+
+.buttons {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.hire-button,
+.download-resume-btn {
+    display: inline-block;
+    background-color: #1b79cc;
+    margin-top: 10px;
+    font-size: 18px;
+    font-weight: 500;
+    width: 200px;
+    gap: 8px;
+    align-items: center;
+    padding: 14px;
+    color: white;
+    text-decoration: none;
+    display: flex;
+}
+
+.hire-button:hover,
+.download-resume-btn:hover {
+    background-color: #1e88e5b7;
+    text-decoration: none;
+}
+
+.edit-form .form-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.edit-form .form-group label {
+    width: 30%;
+    color: #444;
+}
+
+.edit-form .form-group input,
+.edit-form .form-group textarea {
+    width: 70%;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.loading-message {
+    text-align: center;
+    margin-top: 80px;
+    font-size: 18px;
+    color: #555;
+}
+
+/* Profile.css */
+/* Styles for the hire form modal */
+.hire-form-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.hire-form {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.hire-form h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color:#0b7dda;
+}
+
+.hire-form input,
+.hire-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.hire-form input:focus,
+.hire-form textarea:focus {
+    outline: none;
+    border-color: #4f46e5;
+    /* Same color as the button */
+}
+
+.hire-form textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.hire-form button {
+    background-color: #4f46e5;
+    /* Primary color */
+    color: white;
+    padding: 12px 15px;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    border: none;
+    width: 100%;
+    transition: background-color 0.3s ease;
+}
+
+.hire-form button:hover {
+    background-color: #4338ca;
+    /* Darker shade for hover effect */
+}
+
+.hire-form button:disabled {
+    background-color: #d1d5db;
+    cursor: not-allowed;
+}
+
+.hire-form .close-btn {
+    position: absolute;
+    top: 6px;
+    right: 10px ;
+    background-color: transparent;
+    border: none;
+    font-size: 1.25rem;
+    color: #888;
+    cursor: pointer;
+    width: auto;
+    height: auto;
+}
+
+.hire-form .close-btn:hover {
+    color: #e11d48;
+    background-color: #888;
+}
+
+.loading-spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-top: 4px solid #4f46e5;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    position: absolute;
+    top: 50%;
+    left: 45%;
+}
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+  /* Button Group */
+  .btn-group {
+    margin-top: 20px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+  }
+  
+  /* Approve Button */
+  .approve-button {
+    padding: 10px 18px;
+    background-color: #16a34a;
     color: white;
     border: none;
-    transition: .3s ease;
-}
-.resume-btn:hover {
-    background-color: #1e88e5b7;
-}
-
-@media screen and (max-width: 455px) {
-    .sub-container {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .profile-left {
-        width: 100%;
-        justify-content: flex-start;
-        align-items: flex-end;
-        margin-left: 24px;
-        margin-top: 34px;
-    }
-
-    .profile-left>img {
-        width: 90%;
-    }
-
-    .profile-right {
-        margin-left: 23px;
-        width: 100%;
-    }
-}
+    padding: 14px 20px;
+    font-size: 18px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  .approve-button:hover {
+    background-color: #15803d;
+  }
+  
+  /* Reject Button */
+  .reject-button {
+    padding: 10px 18px;
+    background-color: #ef4444;
+    color: white;
+    padding: 14px 20px;
+    border: none;
+    font-size: 18px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  .reject-button:hover {
+    background-color: #dc2626;
+  }
+  
+  /* Delete Button */
+  .delete-button {
+    padding: 10px 18px;
+    background-color: #dc2626;
+    color: white;
+    border: none;
+    font-size: 18px;
+    border-radius: 6px;
+    padding: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  .delete-button:hover {
+    background-color: #7f1d1d;
+  }
+  
+  /* Loading Text */
+  .loading-text {
+    text-align: center;
+    margin-top: 100px;
+    font-size: 18px;
+    color: #444;
+  }

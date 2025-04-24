@@ -1,10 +1,10 @@
-import React, { useEffect, useState,useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import '../styles/Profile.css';
+import "../styles/Profile.css";
 
 const Profile = () => {
-  const { id } = useParams(); // This is the freelancer ID
+  const { id } = useParams();
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [updatedProfile, setUpdatedProfile] = useState({});
@@ -13,179 +13,103 @@ const Profile = () => {
 
   useEffect(() => {
     if (hasCheckedProfile.current) return;
-        hasCheckedProfile.current = true;
-        const checkProfile = async () => {
-          try {
-              const response = await axios.get(`http://localhost:3000/freelancer/check/${id}`);
-              if (!response.data.exists) {
-                  alert("Please complete your profile to continue.");
-                  navigate(`/freelancer/${id}/freelancer-application`);
-              }
-          } catch (error) {
-              console.error("Error checking freelancer profile:", error);
-          }
-      };
+    hasCheckedProfile.current = true;
 
-      checkProfile();
+    const checkProfile = async () => {
+      try {
+        const response = await axios.get(`http://localhost:3000/freelancer/check/${id}`);
+        if (!response.data.exists) {
+          alert("Please complete your profile to continue.");
+          navigate(`/freelancer/${id}/freelancer-application`);
+        }
+      } catch (error) {
+        console.error("Error checking freelancer profile:", error);
+      }
+    };
+
     const fetchProfile = async () => {
       try {
         const res = await axios.get(`http://localhost:3000/profile/${id}`);
         setProfile(res.data);
-        setUpdatedProfile(res.data); // Set the initial profile state for editing
+        setUpdatedProfile(res.data);
       } catch (err) {
         console.error("Error fetching profile:", err);
       }
     };
 
+    checkProfile();
     fetchProfile();
   }, [id]);
 
-  // Handle input changes in the edit form
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setUpdatedProfile((prevProfile) => ({
-      ...prevProfile,
-      [name]: value,
-    }));
+    setUpdatedProfile((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle profile update form submission
   const handleProfileUpdate = async () => {
     try {
       const res = await axios.put(`http://localhost:3000/profile/${id}/update`, updatedProfile);
       alert(res.data.message);
-      setIsEditing(false); // Exit edit mode
-      setProfile(updatedProfile); // Update profile state with the new values
+      setIsEditing(false);
+      setProfile(updatedProfile);
     } catch (err) {
       console.error("Error updating profile:", err);
     }
   };
 
-  if (!profile) return <div className="text-center mt-20 text-lg">Loading...</div>;
+  if (!profile) return <div className="loading-message">Loading...</div>;
 
   return (
-    <div className="flex justify-center p-10 min-h-screen">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-5xl flex gap-8">
+    <div className="profile-containr">
+      <div className="profile-card">
 
-        {/* Profile Picture */}
-        <div className="w-1/3 flex justify-center items-start">
+        <div className="profile-pic-wrapper">
           <img
             src={`http://localhost:3000/${profile.profile_pic_path}`}
             alt="Profile"
-            className="rounded-xl w-48 h-48 object-cover shadow"
+            className="profile-pic"
           />
         </div>
 
-        {/* Right Side */}
-        <div className="w-2/3 space-y-6">
-          {/* Name */}
-          <h2 className="text-3xl font-bold text-gray-800">
-            {profile.first_name} {profile.last_name}
-          </h2>
+        <div className="profile-details">
+          <h2 className="profile-name">{profile.first_name} {profile.last_name}</h2>
 
-          {/* Personal Details */}
-          <div className="border-b pb-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-semibold text-gray-700">Personal Details</h3>
-              {/* Conditionally render the Edit button */}
+          <div className="section personal-section">
+            <div className="section-header">
+              <h3 className="personal-detail">Personal Details</h3>
               {profile.status === "Approved" && !isEditing && (
-                <button
-                  className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600"
-                  onClick={() => setIsEditing(true)}
-                >
-                  Edit Profile
-                </button>
+                <button className="edit-btn" onClick={() => setIsEditing(true)}>Edit Profile</button>
               )}
             </div>
-            <div className="mt-2 text-gray-600 space-y-1">
+
+            <div className="section-body">
               {isEditing ? (
-                <>
-                  {/* Editable fields for name, bio, contact, city, and country */}
-                  <div className="space-y-2">
-                    <div className="flex items-center">
-                      <label htmlFor="first_name" className="w-1/3 text-gray-700">First Name</label>
-                      <input
-                        type="text"
-                        name="first_name"
-                        value={updatedProfile.first_name}
-                        onChange={handleInputChange}
-                        className="w-2/3 px-4 py-2 border border-gray-300 rounded"
-                        placeholder="First Name"
-                      />
+                <div className="edit-form">
+                  {["first_name", "last_name", "bio", "contact", "city", "country"].map((field) => (
+                    <div className="form-group" key={field}>
+                      <label htmlFor={field}>{field.replace('_', ' ').replace(/^\w/, c => c.toUpperCase())}</label>
+                      {field === "bio" ? (
+                        <textarea
+                          name={field}
+                          value={updatedProfile[field]}
+                          onChange={handleInputChange}
+                          rows="4"
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          name={field}
+                          value={updatedProfile[field]}
+                          onChange={handleInputChange}
+                          maxLength={field === "contact" ? 10 : undefined}
+                        />
+                      )}
                     </div>
-                    <div className="flex items-center">
-                      <label htmlFor="last_name" className="w-1/3 text-gray-700">Last Name</label>
-                      <input
-                        type="text"
-                        name="last_name"
-                        value={updatedProfile.last_name}
-                        onChange={handleInputChange}
-                        className="w-2/3 px-4 py-2 border border-gray-300 rounded"
-                        placeholder="Last Name"
-                      />
-                    </div>
-                    <div className="flex items-center">
-                      <label htmlFor="bio" className="w-1/3 text-gray-700">Bio</label>
-                      <textarea
-                        name="bio"
-                        value={updatedProfile.bio}
-                        onChange={handleInputChange}
-                        className="w-2/3 px-4 py-2 border border-gray-300 rounded"
-                        rows="4"
-                        placeholder="Bio"
-                      />
-                    </div>
-                    <div className="flex items-center">
-                      <label htmlFor="contact" className="w-1/3 text-gray-700">Contact</label>
-                      <input
-                        type="text"
-                        name="contact"
-                        value={updatedProfile.contact}
-                        onChange={handleInputChange}
-                        className="w-2/3 px-4 py-2 border border-gray-300 rounded mt-2"
-                        placeholder="Contact"
-                        inputMode="numeric"
-                        pattern="\d*"
-                        onInput={(e) => {
-                          e.target.value = e.target.value.replace(/\D/g, '');
-                        }}
-                        maxLength={10}
-                        minLength={10}
-                      />
-                    </div>
-                    <div className="flex items-center">
-                      <label htmlFor="city" className="w-1/3 text-gray-700">City</label>
-                      <input
-                        type="text"
-                        name="city"
-                        value={updatedProfile.city}
-                        onChange={handleInputChange}
-                        className="w-2/3 px-4 py-2 border border-gray-300 rounded mt-2"
-                        placeholder="City"
-                      />
-                    </div>
-                    <div className="flex items-center">
-                      <label htmlFor="country" className="w-1/3 text-gray-700">Country</label>
-                      <input
-                        type="text"
-                        name="country"
-                        value={updatedProfile.country}
-                        onChange={handleInputChange}
-                        className="w-2/3 px-4 py-2 border border-gray-300 rounded mt-2"
-                        placeholder="Country"
-                      />
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleProfileUpdate}
-                    className="bg-green-500 text-white px-4 py-2 rounded mt-4"
-                  >
-                    Save Changes
-                  </button>
-                </>
+                  ))}
+                  <button className="save-btn" onClick={handleProfileUpdate}>Save Changes</button>
+                </div>
               ) : (
                 <>
-                  {/* Non-editable fields */}
                   <p><strong>Bio:</strong> {profile.bio}</p>
                   <p><strong>Email:</strong> {profile.email}</p>
                   <p><strong>Contact:</strong> {profile.contact}</p>
@@ -196,33 +120,19 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* Professional Details */}
-          <div>
-            <h3 className="text-xl font-semibold text-gray-700">Professional Details</h3>
-            <div className="mt-2 text-gray-600 space-y-1">
+          <div className="section">
+            <div className="section-header">
+              <h3>Professional Details</h3>
+            </div>
+            <div className="section-body">
               <p><strong>Title:</strong> {profile.title}</p>
               <p><strong>Skills:</strong> {profile.skills}</p>
               <p><strong>Experience:</strong> {profile.experience}</p>
-
-              {/* Display Application Status */}
-              <div className="mt-4">
-                <p><strong>Application Status:</strong> {profile.status}</p>
-              </div>
+              <p><strong>Application Status:</strong> {profile.status}</p>
 
               {profile.social_links && (
-                <p>
-                  <strong>Portfolio:</strong>{" "}
-                  <a
-                    href={profile.social_links}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 underline"
-                  >
-                    {profile.social_links}
-                  </a>
-                </p>
+                <p><strong>Portfolio:</strong> <a href={profile.social_links} target="_blank" rel="noopener noreferrer">{profile.social_links}</a></p>
               )}
-
               {profile.resume_path && (
                 <p>
                   <a
@@ -230,7 +140,7 @@ const Profile = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     download
-                    className="inline-block mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                    className="download-resume-btn"
                   >
                     Download Resume
                   </a>
@@ -239,8 +149,8 @@ const Profile = () => {
             </div>
           </div>
         </div>
-      </div>
 
+      </div>
     </div>
   );
 };

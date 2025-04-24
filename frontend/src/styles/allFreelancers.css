@@ -5,6 +5,7 @@
     padding: 30px;
     min-height: auto;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
   }
   
   .title {

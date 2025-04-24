@@ -66,7 +66,7 @@ app.post('/check-email', async (req, res) => {
 
     try {
         const [rows] = await db.query('SELECT id, email FROM users WHERE email = ?', [email]);
-        
+
         if (rows.length > 0) {
             return res.json({
                 exists: true,
@@ -249,7 +249,7 @@ app.put('/password/:id', async (req, res) => {
     const { id } = req.params;
     const { password } = req.body;
 
-    if ( !password) {
+    if (!password) {
         return res.status(400).json({ success: false, message: "Email and password are required." });
     }
 
@@ -469,7 +469,7 @@ app.post('/admin/application/:id', async (req, res) => {
             "select * from jobs where freelancer_id = ?",
             [id]
         );
-        
+
         for (let i = 0; i < clients.length; i++) {
             const { client_email, client_name } = clients[i];
             const mailOptions = {
@@ -478,7 +478,7 @@ app.post('/admin/application/:id', async (req, res) => {
                 subject: `Freelancer Account Update`,
                 text: `Dear ${client_name},\n\nWe regret to inform you that the freelancer ${first_name} ${last_name} associated with your job has had their account blocked or deleted. We apologize for any inconvenience this may have caused.\n\nIf you need further assistance or wish to contact the freelancer directly, please feel free to do so. Freelancer email:${email}\n\nThank you for your understanding.\n\nBest regards,\nPortfolio Pro Team`
             };
-            
+
             transporter.sendMail(mailOptions, (error, info) => {
                 if (error) {
                     console.error('Email sending failed:', error);
@@ -487,7 +487,7 @@ app.post('/admin/application/:id', async (req, res) => {
                 }
             });
         }
-        
+
         // Update or delete from freelancer table
         if (status === 'approve') {
             await db.query("UPDATE freelancer SET status = ? WHERE id = ?", [newStatus, id]);
@@ -569,6 +569,9 @@ app.get('/admin/dashboard', async (req, res) => {
         const [[{ total_freelancers }]] = await connection.query(`SELECT COUNT(*) AS total_freelancers FROM freelancer WHERE status = 'Approved'`);
         const [[{ total_pending }]] = await connection.query(`SELECT COUNT(*) AS total_pending FROM freelancer WHERE status = 'Pending'`);
         const [[{ total_clients }]] = await connection.query(`SELECT COUNT(*) AS total_clients FROM users WHERE role = 'client'`);
+        // Add this query inside the /admin/dashboard route after your existing stats queries
+        const [[{ total_not_applied }]] = await connection.query(`SELECT COUNT(*) AS total_not_applied FROM users WHERE role = 'freelancer' AND id NOT IN (SELECT user_id FROM freelancer)`);
+
 
         connection.release();
 
@@ -579,7 +582,8 @@ app.get('/admin/dashboard', async (req, res) => {
                 total_users,
                 total_freelancers,
                 total_pending,
-                total_clients
+                total_clients,
+                total_not_applied
             }
         });
 

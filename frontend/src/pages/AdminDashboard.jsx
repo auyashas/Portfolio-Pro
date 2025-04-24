@@ -54,7 +54,8 @@ const AdminDashboard = () => {
                 <p>Total Active Freelancers: <span className='grey'><strong>{stats?.total_freelancers ?? 'Loading...'}</strong></span></p>
                 <p>Total Clients: <span className='grey'><strong>{stats?.total_clients ?? 'Loading...'}</strong></span></p>
                 <p>Pending Freelancer Applications: <span className='grey'><strong>{stats?.total_pending ?? 'Loading...'}</strong></span></p>
-                <p>Total Users: <span className='grey'><strong>{stats?.total_users ?? 'Loading...'}</strong></span></p>
+                <p>Freelancer who haven't applied: <span className='grey'><strong>{stats?.total_not_applied ?? 'Loading...'}</strong></span></p>
+                <p className='total-user'>Total Users: <span className='grey'><strong>{stats?.total_users ?? 'Loading...'}</strong></span></p>
             </div>
 
             <h3>Freelancer Table</h3>

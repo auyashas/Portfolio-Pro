@@ -8,6 +8,11 @@
   min-height: 80vh;
 }
 
+.total-user{
+  position: relative;
+  left: 70%;
+}
+
 /* Dashboard Headings */
 h2 {
   text-align: center;
@@ -39,6 +44,7 @@ h3 {
 .stats p {
   margin-left: 20%;
   text-align: left;
+  font-weight: 500;
   color: #8d8d8d;
 }
 .grey{
