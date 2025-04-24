@@ -3,6 +3,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/Auth.css';
+import Popup from '../components/Popup';
 
 axios.defaults.withCredentials = true;
 
@@ -19,6 +20,8 @@ const ForgotPassword = () => {
     const [isTimerRunning, setIsTimerRunning] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [userId, setUserId] = useState(null);
+    const [popupMsg, setPopupMsg] = useState('');
+    const [showPopup, setShowPopup] = useState(false);
 
     const navigate = useNavigate();
 
@@ -39,97 +42,97 @@ const ForgotPassword = () => {
         document.title = "Portfolio-Pro | Forgot Password";
     }, []);
 
+    const showMessage = (msg) => {
+        setPopupMsg(msg);
+        setShowPopup(true);
+    };
+
     const validatePassword = (password) => {
         const regex = /^(?=.*\d)[A-Za-z\d!@#$%^&*]{8,}$/;
         return regex.test(password);
     };
 
     const sendOtp = async () => {
-        if (!email) return alert("Enter your email first.");
+        if (!email) return showMessage("Enter your email first.");
         try {
             setIsLoading(true);
-    
-            // Step 1: Check if email exists
+
             const checkRes = await axios.post("http://localhost:3000/check-email", { email });
             if (!checkRes.data.exists) {
-                console.log("no")
-                alert("Email not registered.");
+                showMessage("Email not registered.");
                 return;
             }
-    
-            // Step 2: Save userId
+
             setUserId(checkRes.data.userId);
-    
-            // Step 3: Send OTP
+
             const response = await axios.post("http://localhost:3000/send-otp", { email });
             if (response.data.success) {
                 setIsOtpSent(true);
                 setIsOtpVerified(false);
                 setTimer(60);
                 setIsTimerRunning(true);
-                alert("OTP sent to your email.");
+                showMessage("OTP sent to your email.");
             } else {
-                alert("Failed to send OTP.");
+                showMessage("Failed to send OTP.");
             }
         } catch (err) {
-            alert("Error sending OTP.");
+            showMessage("Error sending OTP.");
             console.error(err);
         } finally {
             setIsLoading(false);
         }
     };
-    
+
     const verifyOtp = async () => {
         if (otp.length !== 4 || !/^\d{4}$/.test(otp)) {
-            alert("Please enter a valid 4-digit OTP.");
+            showMessage("Please enter a valid 4-digit OTP.");
             return;
         }
-    
+
         try {
             const otpRes = await axios.post("http://localhost:3000/verify-otp", { email, otp });
-    
+
             if (otpRes.data.success) {
                 setIsOtpVerified(true);
                 setIsTimerRunning(false);
-                alert("OTP verified successfully!");
+                showMessage("OTP verified successfully!");
             } else {
-                alert(otpRes.data.message);
+                showMessage(otpRes.data.message);
             }
         } catch (err) {
-            alert(err.response?.data?.message || "Error verifying OTP.");
+            showMessage(err.response?.data?.message || "Error verifying OTP.");
         }
     };
-    
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!email || !password || !confirmPassword) {
-            alert('Please fill in all fields.');
+            showMessage('Please fill in all fields.');
             return;
         }
 
         if (password !== confirmPassword) {
-            alert('Passwords do not match.');
+            showMessage('Passwords do not match.');
             return;
         }
 
         if (!validatePassword(password)) {
-            alert('Password must be at least 8 characters long and contain at least one number.');
+            showMessage('Password must be at least 8 characters long and contain at least one number.');
             return;
         }
 
         if (!isOtpVerified || !userId) {
-            alert("Please verify your OTP before proceeding.");
+            showMessage("Please verify your OTP before proceeding.");
             return;
         }
 
         try {
             await axios.put(`http://localhost:3000/password/${userId}`, { password });
-            alert('Password updated successfully. Please log in.');
-            navigate('/login');
+            showMessage('Password updated successfully. Please log in.');
+            setTimeout(() => navigate('/login'), 2000);
         } catch (err) {
-            alert("Error updating password. Try again.");
+            showMessage("Error updating password. Try again.");
             console.error(err);
         }
     };
@@ -237,6 +240,10 @@ const ForgotPassword = () => {
                     <p>Remembered your password?</p> <Link to="/login">Log in</Link>
                 </div>
             </form>
+
+            {showPopup && (
+                <Popup message={popupMsg} onClose={() => setShowPopup(false)} />
+            )}
         </div>
     );
 };

@@ -8,6 +8,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const PORT = 3000;

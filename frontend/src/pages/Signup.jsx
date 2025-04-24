@@ -3,6 +3,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/Auth.css';
+import Popup from '../components/Popup'; // Assuming you have this component
 
 axios.defaults.withCredentials = true;
 
@@ -18,7 +19,9 @@ const Signup = () => {
     const [userType, setUserType] = useState('freelancer');
     const [timer, setTimer] = useState(60);
     const [isTimerRunning, setIsTimerRunning] = useState(false);
-    const [isLoading, setIsLoading] = useState(false); // New state for loading buffer
+    const [isLoading, setIsLoading] = useState(false);
+    const [popupMessage, setPopupMessage] = useState('');
+    const [showPopup, setShowPopup] = useState(false);
 
     const navigate = useNavigate();
 
@@ -39,37 +42,41 @@ const Signup = () => {
         document.title = "Portfolio-Pro | Sign-up";
     }, []);
 
+    const showMessage = (msg) => {
+        setPopupMessage(msg);
+        setShowPopup(true);
+    };
+
     const validatePassword = (password) => {
         const regex = /^(?=.*\d)[A-Za-z\d!@#$%^&*]{8,}$/;
         return regex.test(password);
     };
 
     const sendOtp = async () => {
-        if (!email) return alert("Enter your email first.");
+        if (!email) return showMessage("Enter your email first.");
         try {
-            setIsLoading(true); // Start loading buffer
+            setIsLoading(true);
             const response = await axios.post("http://localhost:3000/send-otp", { email });
             if (response.data.success) {
                 setIsOtpSent(true);
                 setIsOtpVerified(false);
                 setTimer(60);
                 setIsTimerRunning(true);
-                alert("OTP sent to your email.");
+                showMessage("OTP sent to your email.");
             } else {
-                alert("Failed to send OTP.");
+                showMessage("Failed to send OTP.");
             }
         } catch (err) {
             console.error(err);
-            alert("Error sending OTP.");
+            showMessage("Error sending OTP.");
         } finally {
-            setIsLoading(false); // Stop loading buffer
+            setIsLoading(false);
         }
     };
 
     const verifyOtp = async () => {
         if (otp.length !== 4 || !/^\d{4}$/.test(otp)) {
-            alert("Please enter a valid 4-digit OTP.");
-            return;
+            return showMessage("Please enter a valid 4-digit OTP.");
         }
 
         try {
@@ -77,69 +84,52 @@ const Signup = () => {
 
             if (response.data.success) {
                 setIsOtpVerified(true);
-                setIsTimerRunning(false); // 🛑 stop the timer
-                alert("OTP verified successfully!");
+                setIsTimerRunning(false);
+                showMessage("OTP verified successfully!");
             } else {
-                alert(response.data.message);
+                showMessage(response.data.message);
             }
         } catch (err) {
-            alert(err.response?.data?.message || "Error verifying OTP.");
+            showMessage(err.response?.data?.message || "Error verifying OTP.");
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Form submitted");
-    
-        console.log({ email, password, confirmPassword, isOtpVerified });
-    
+
         if (!email || !password || !confirmPassword) {
-            alert('Please fill in all fields.');
-            console.log("Missing fields");
-            return;
+            return showMessage('Please fill in all fields.');
         }
-    
+
         if (password !== confirmPassword) {
-            alert('Passwords do not match.');
-            console.log("Passwords mismatch");
-            return;
+            return showMessage('Passwords do not match.');
         }
-    
+
         if (!validatePassword(password)) {
-            alert('Password must be at least 8 characters long and contain at least one number.');
-            console.log("Password validation failed");
-            return;
+            return showMessage('Password must be at least 8 characters long and contain at least one number.');
         }
-    
+
         if (!isOtpVerified) {
-            alert("Please verify your OTP before proceeding.");
-            console.log("OTP not verified");
-            return;
+            return showMessage("Please verify your OTP before proceeding.");
         }
-    
+
         try {
-            console.log("Sending request to /check-email...");
             const response = await axios.post('http://localhost:3000/check-email', { email });
-            console.log("Response from backend:", response.data);
 
             if (response.data.exists) {
-                alert('User already exists. Please log in.');
-                console.log("Email already exists");
-                return;
+                return showMessage('User already exists. Please log in.');
             }
-    
+
             localStorage.setItem('signupEmail', email);
             localStorage.setItem('signupPassword', password);
             localStorage.setItem('userType', userType);
-            console.log("All validations passed, navigating to /register");
-    
+
             navigate('/register');
         } catch (error) {
             console.error('Error checking email:', error);
-            alert('Error checking email. Please try again later.');
+            showMessage('Error checking email. Please try again later.');
         }
     };
-    
 
     return (
         <div className="auth-box">
@@ -195,7 +185,6 @@ const Signup = () => {
                     </p>
                 )}
 
-                {/* Show loading buffer while sending OTP */}
                 {isLoading && (
                     <div className="loading-buffer">
                         <span className='loading-text'>Sending OTP</span>
@@ -270,6 +259,8 @@ const Signup = () => {
                     <p>Do you have an account?</p> <Link to="/login">Log in as a freelancer</Link>
                 </div>
             </form>
+
+            {showPopup && <Popup message={popupMessage} onClose={() => setShowPopup(false)} />}
         </div>
     );
 };

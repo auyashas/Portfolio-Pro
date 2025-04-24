@@ -4,6 +4,8 @@ import axios from 'axios';
 import '../styles/Auth.css';
 import defaultProfilePic from '../assets/user.png';
 import editIcon from '../assets/edit_icon.png';
+import Popup from '../components/Popup';
+import ConfirmPopup from '../components/ConfirmPopup';
 
 const FreelancerApplication = () => {
     useEffect(() => {
@@ -24,6 +26,8 @@ const FreelancerApplication = () => {
         title: ''
     });
 
+    const [popupMessage, setPopupMessage] = useState('');
+    const [confirmPopup, setConfirmPopup] = useState(null);
     const [profilePreview, setProfilePreview] = useState(defaultProfilePic);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -38,13 +42,13 @@ const FreelancerApplication = () => {
             setFormData(prev => ({ ...prev, resume: files[0] }));
         } else if (name === 'bio') {
             if (value.length > 350) {
-                alert("Bio cannot exceed 350 characters.");
+                setPopupMessage("Bio cannot exceed 350 characters.");
                 return;
             }
             setFormData(prev => ({ ...prev, bio: value }));
         } else if (name === 'experience') {
             if (value && isNaN(value)) {
-                alert("Experience must be a number.");
+                setPopupMessage("Experience must be a number.");
                 return;
             }
             setFormData(prev => ({ ...prev, experience: value }));
@@ -58,42 +62,49 @@ const FreelancerApplication = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Validate before FormData creation
         const { title, bio, skill, resume, termsAccepted } = formData;
 
         if (!title || !bio.trim() || !skill.trim() || !resume || !termsAccepted) {
-            alert("Please fill all required fields and accept the Terms & Conditions.");
+            setPopupMessage("Please fill all required fields and accept the Terms & Conditions.");
             return;
         }
 
-        const formDataToSend = new FormData();
-        formDataToSend.append('user_id', id);
-        formDataToSend.append('profilePicture', formData.profilePicture || 'default-user.png');
-        formDataToSend.append('resume', resume);
-        formDataToSend.append('bio', bio.trim());
-        formDataToSend.append('social_links', formData.social_links.trim());
-        formDataToSend.append('skills', skill.trim());
-        formDataToSend.append('experience', formData.experience);
-        formDataToSend.append('title', title);
+        setConfirmPopup({
+            message: "Are you sure you want to submit the application? Some fields cannot be changed later.",
+            onConfirm: async () => {
+                setConfirmPopup(null);
 
-        try {
-            setIsLoading(true);
-            const response = await axios.post('http://localhost:3000/freelancer/submit', formDataToSend, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
+                const formDataToSend = new FormData();
+                formDataToSend.append('user_id', id);
+                formDataToSend.append('profilePicture', formData.profilePicture || 'default-user.png');
+                formDataToSend.append('resume', resume);
+                formDataToSend.append('bio', bio.trim());
+                formDataToSend.append('social_links', formData.social_links.trim());
+                formDataToSend.append('skills', skill.trim());
+                formDataToSend.append('experience', formData.experience);
+                formDataToSend.append('title', title);
+
+                try {
+                    setIsLoading(true);
+                    const response = await axios.post('http://localhost:3000/freelancer/submit', formDataToSend, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    });
+
+                    if (response.status === 200) {
+                        setPopupMessage("Application submitted for approval.");
+                        setTimeout(() => navigate(`/freelancer/${id}`), 1000);
+                    }
+                } catch (error) {
+                    console.error('Submission failed:', error);
+                    setPopupMessage("Failed to submit application. Please try again.");
+                } finally {
+                    setIsLoading(false);
                 }
-            });
-
-            if (response.status === 200) {
-                alert("Application submitted for approval.");
-                navigate(`/freelancer/${id}`);
-            }
-        } catch (error) {
-            console.error('Submission failed:', error);
-            alert("Failed to submit application. Please try again.");
-        } finally {
-            setIsLoading(false);
-        }
+            },
+            onCancel: () => setConfirmPopup(null)
+        });
     };
 
     return (
@@ -127,6 +138,7 @@ const FreelancerApplication = () => {
                             required
                         >
                             <option value="" disabled>Select your job role*</option>
+                            {/* options here */}
                             <option value="Web Developer">Web Developer</option>
                             <option value="Mobile App Developer">Mobile App Developer</option>
                             <option value="UI/UX Designer">UI/UX Designer</option>
@@ -142,7 +154,6 @@ const FreelancerApplication = () => {
                             <option value="Game Developer">Game Developer</option>
                             <option value="Software Tester">Software Tester</option>
                             <option value="IT Support Specialist">IT Support Specialist</option>
-
                         </select>
 
                         <textarea
@@ -223,6 +234,15 @@ const FreelancerApplication = () => {
                     </div>
                 </form>
             </div>
+
+            {popupMessage && <Popup message={popupMessage} onClose={() => setPopupMessage('')} />}
+            {confirmPopup && (
+                <ConfirmPopup
+                    message={confirmPopup.message}
+                    onConfirm={confirmPopup.onConfirm}
+                    onCancel={confirmPopup.onCancel}
+                />
+            )}
         </div>
     );
 };

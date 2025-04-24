@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import '../styles/AdminDashboard.css'; // optional styling
+import Popup from '../components/Popup';
+import ConfirmPopup from '../components/ConfirmPopup';
+import '../styles/AdminDashboard.css';
 
 const AdminDashboard = () => {
     const [freelancers, setFreelancers] = useState([]);
@@ -8,6 +10,11 @@ const AdminDashboard = () => {
     const [stats, setStats] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    const [showPopup, setShowPopup] = useState(false);
+    const [popupMessage, setPopupMessage] = useState('');
+    const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+    const [freelancerToDelete, setFreelancerToDelete] = useState(null);
 
     useEffect(() => {
         fetchDashboard();
@@ -27,20 +34,35 @@ const AdminDashboard = () => {
         }
     };
 
-    const deleteFreelancer = async (id) => {
-        const confirm = window.confirm("Are you sure you want to delete this freelancer?");
-        if (!confirm) return;
+    const handleDeleteClick = (id) => {
+        setFreelancerToDelete(id);
+        setShowConfirmPopup(true);
+    };
+
+    const confirmDelete = async () => {
         try {
             setLoading(true);
-            await axios.post(`http://localhost:3000/admin/application/${id}`, { status: 'reject' });
-            alert("Freelancer Account deleted.");
-            window.location.reload();
+            await axios.post(`http://localhost:3000/admin/application/${freelancerToDelete}`, {
+                status: 'reject',
+            });
+            setPopupMessage("Freelancer account deleted.");
+            setShowPopup(true);
+            setFreelancers((prev) =>
+                prev.filter((freelancer) => freelancer.id !== freelancerToDelete)
+            );
         } catch (error) {
             console.error("Error rejecting freelancer:", error);
-            alert("Failed to reject freelancer.");
-        }finally {
+            setPopupMessage("Failed to reject freelancer.");
+            setShowPopup(true);
+        } finally {
             setLoading(false);
-        } 
+            setShowConfirmPopup(false);
+        }
+    };
+
+    const cancelDelete = () => {
+        setShowConfirmPopup(false);
+        setFreelancerToDelete(null);
     };
 
     return (
@@ -54,7 +76,7 @@ const AdminDashboard = () => {
                 <p>Total Active Freelancers: <span className='grey'><strong>{stats?.total_freelancers ?? 'Loading...'}</strong></span></p>
                 <p>Total Clients: <span className='grey'><strong>{stats?.total_clients ?? 'Loading...'}</strong></span></p>
                 <p>Pending Freelancer Applications: <span className='grey'><strong>{stats?.total_pending ?? 'Loading...'}</strong></span></p>
-                <p>Freelancer who haven't applied: <span className='grey'><strong>{stats?.total_not_applied ?? 'Loading...'}</strong></span></p>
+                <p>Freelancers who haven't applied: <span className='grey'><strong>{stats?.total_not_applied ?? 'Loading...'}</strong></span></p>
                 <p className='total-user'>Total Users: <span className='grey'><strong>{stats?.total_users ?? 'Loading...'}</strong></span></p>
             </div>
 
@@ -82,15 +104,17 @@ const AdminDashboard = () => {
                             <td>
                                 {f.resume_path ? (
                                     <a href={`http://localhost:3000/download-resume/${f.resume_path.replace(/\\/g, '/').split('/').pop()}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    download>
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        download>
                                         Download
                                     </a>
                                 ) : 'N/A'}
                             </td>
                             <td>
-                                <button onClick={() => deleteFreelancer(f.id)} className="delete-btn">Delete</button>
+                                <button onClick={() => handleDeleteClick(f.id)} className="delete-btn">
+                                    Delete
+                                </button>
                             </td>
                         </tr>
                     ))}
@@ -117,6 +141,18 @@ const AdminDashboard = () => {
                     ))}
                 </tbody>
             </table>
+
+            {showPopup && (
+                <Popup message={popupMessage} onClose={() => setShowPopup(false)} />
+            )}
+
+            {showConfirmPopup && (
+                <ConfirmPopup
+                    message="Are you sure you want to delete this freelancer?"
+                    onConfirm={confirmDelete}
+                    onCancel={cancelDelete}
+                />
+            )}
         </div>
     );
 };

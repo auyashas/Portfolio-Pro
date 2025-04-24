@@ -1,7 +1,9 @@
-import { useState, useEffect,useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/Applications.css";
+import Popup from "../components/Popup";
+import ConfirmPopup from "../components/ConfirmPopup";
 
 const JobApplications = () => {
     const { id: freelancerId } = useParams();
@@ -11,6 +13,8 @@ const JobApplications = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [processing, setProcessing] = useState(false);
+    const [showPopup, setShowPopup] = useState(false);
+    const [confirmData, setConfirmData] = useState(null); // For ConfirmPopup
     const hasCheckedProfile = useRef(false);
     const navigate = useNavigate();
 
@@ -25,15 +29,15 @@ const JobApplications = () => {
                     try {
                         const response = await axios.get(`http://localhost:3000/freelancer/check/${freelancerId}`);
                         if (!response.data.exists) {
-                            alert("Please complete your profile to continue.");
-                            navigate(`/freelancer/${freelancerId}/freelancer-application`);
+                            setShowPopup(true); 
                         }
                     } catch (error) {
                         console.error("Error checking freelancer profile:", error);
                     }
                 };
-        
-                checkProfile();
+
+                await checkProfile();
+
                 const [pending, accepted, rejected] = await Promise.all([
                     axios.get(`http://localhost:3000/freelancer/${freelancerId}/job-requests/Pending`),
                     axios.get(`http://localhost:3000/freelancer/${freelancerId}/job-requests/Approved`),
@@ -54,15 +58,25 @@ const JobApplications = () => {
         fetchJobs();
     }, [freelancerId]);
 
-    const handleStatusChange = async (jobId, status) => {
+    const handleStatusChange = (jobId, status) => {
+        const message = `Are you sure you want to ${status.toLowerCase()} this job?`;
+        setConfirmData({ jobId, status, message });
+    };
+
+    const handleConfirm = async () => {
+        if (!confirmData) return;
+        const { jobId, status } = confirmData;
+
         setProcessing(true);
+        setConfirmData(null); // Close popup
+
         try {
             await axios.post(`http://localhost:3000/freelancer/job-status/${jobId}`, { status });
-            alert(`Job ${status === "Approved" ? "approved" : "rejected"}.`);
-            window.location.reload();
+            setShowPopup({ message: `Job ${status.toLowerCase()} successfully.` }); // 👈 show success popup
+            setTimeout(() => window.location.reload(), 1500); // optional reload
         } catch (error) {
             console.error("Error updating job status:", error);
-            alert("Failed to update status.");
+            setShowPopup({ message: "Failed to update job status." });
         } finally {
             setProcessing(false);
         }
@@ -76,7 +90,7 @@ const JobApplications = () => {
             <h2>Job Requests</h2>
             {processing && <p className="processing-text">Processing, please wait...</p>}
 
-            {/* Pending Jobs Table */}
+            {/* PENDING JOBS */}
             <h3>Pending Applications</h3>
             {pendingJobs.length === 0 ? (
                 <p>No pending job requests.</p>
@@ -124,7 +138,7 @@ const JobApplications = () => {
                 </table>
             )}
 
-            {/* Accepted Jobs Table */}
+            {/* ACCEPTED JOBS */}
             <h3>Accepted Jobs</h3>
             {acceptedJobs.length === 0 ? (
                 <p>No accepted job requests.</p>
@@ -155,7 +169,7 @@ const JobApplications = () => {
                 </table>
             )}
 
-            {/* Rejected Jobs Table */}
+            {/* REJECTED JOBS */}
             <h3>Rejected Jobs</h3>
             {rejectedJobs.length === 0 ? (
                 <p>No rejected job requests.</p>
@@ -184,6 +198,25 @@ const JobApplications = () => {
                         ))}
                     </tbody>
                 </table>
+            )}
+
+            {/* 👇 Popups */}
+            {showPopup && (
+                <Popup
+                    message={typeof showPopup === "string" ? showPopup : showPopup.message}
+                    onClose={() => {
+                        setShowPopup(false);
+                        if (typeof showPopup !== "string") navigate(`/freelancer/${freelancerId}/freelancer-application`);
+                    }}
+                />
+            )}
+
+            {confirmData && (
+                <ConfirmPopup
+                    message={confirmData.message}
+                    onConfirm={handleConfirm}
+                    onCancel={() => setConfirmData(null)}
+                />
             )}
         </div>
     );

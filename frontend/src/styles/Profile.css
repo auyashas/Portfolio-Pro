@@ -271,27 +271,44 @@
     color: #e11d48;
     background-color: #888;
 }
-
-.loading-spinner {
-    border: 4px solid rgba(0, 0, 0, 0.1);
-    border-top: 4px solid #4f46e5;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
+.loading-bounce {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
     position: absolute;
     top: 50%;
-    left: 45%;
-}
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  
+  .loading-bounce div {
+    width: 10px;
+    height: 10px;
+    background-color: #4f46e5;
+    border-radius: 50%;
+    animation: bounce 0.6s infinite alternate;
+  }
+  
+  .loading-bounce div:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  
+  .loading-bounce div:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+  
+  @keyframes bounce {
+    from {
+      transform: translateY(0);
+      opacity: 0.5;
     }
-
-    100% {
-        transform: rotate(360deg);
+    to {
+      transform: translateY(-12px);
+      opacity: 1;
     }
-}
+  }
+  
   /* Button Group */
   .btn-group {
     margin-top: 20px;

@@ -3,12 +3,17 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Mail, X } from 'lucide-react';
 import '../styles/Profile.css';
+import Popup from '../components/Popup';
+ // import your popup
 
 const ClientFreelancerProfile = () => {
   const { id, freelancerid } = useParams();
   const [profile, setProfile] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const [popupMessage, setPopupMessage] = useState('');
+  const [showPopup, setShowPopup] = useState(false);
 
   const [formData, setFormData] = useState({
     job_title: '',
@@ -18,7 +23,6 @@ const ClientFreelancerProfile = () => {
     client_contact: ''
   });
 
-  // Fetch freelancer profile
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -31,7 +35,6 @@ const ClientFreelancerProfile = () => {
     fetchProfile();
   }, [freelancerid]);
 
-  // Escape key closes form
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === 'Escape' && showForm) setShowForm(false);
@@ -54,7 +57,9 @@ const ClientFreelancerProfile = () => {
         ...formData
       });
 
-      alert('Hire request sent successfully!');
+      setPopupMessage('Hire request sent successfully!');
+      setShowPopup(true);
+
       setFormData({
         job_title: '',
         description: '',
@@ -65,7 +70,8 @@ const ClientFreelancerProfile = () => {
       setShowForm(false);
     } catch (err) {
       console.error('Error sending hire request:', err);
-      alert('Failed to send hire request.');
+      setPopupMessage('Failed to send hire request.');
+      setShowPopup(true);
     } finally {
       setLoading(false);
     }
@@ -76,7 +82,6 @@ const ClientFreelancerProfile = () => {
   return (
     <div className="profile-containr">
       <div className="profile-card">
-        {/* Profile Picture */}
         <div className="profile-pic-wrapper">
           <img
             src={`http://localhost:3000/${profile.profile_pic_path}`}
@@ -85,7 +90,6 @@ const ClientFreelancerProfile = () => {
           />
         </div>
 
-        {/* Freelancer Details */}
         <div className="profile-details">
           <h2 className="profile-name">{profile.first_name} {profile.last_name}</h2>
 
@@ -113,7 +117,6 @@ const ClientFreelancerProfile = () => {
             </div>
           </div>
 
-          {/* Resume & Hire Button */}
           <div className="buttons">
             {profile.resume_path && (
               <a
@@ -133,11 +136,18 @@ const ClientFreelancerProfile = () => {
         </div>
       </div>
 
-      {/* Hire Form Modal */}
       {showForm && (
         <div className="hire-form-backdrop">
-          <form onSubmit={handleSubmit} className="hire-form">  
-            {loading && <div className="loadindg-background"><div className="loading-spinner"></div></div>}
+          <form onSubmit={handleSubmit} className="hire-form">
+            {loading && (
+              <div className="loading-background">
+                <div className="loading-bounce">
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                </div>
+              </div>
+            )}
 
             <button type="button" onClick={() => !loading && setShowForm(false)} className="close-btn" disabled={loading}>
               <X size={20} />
@@ -156,6 +166,15 @@ const ClientFreelancerProfile = () => {
             </button>
           </form>
         </div>
+      )}
+
+      {/* Popup Component */}
+      {showPopup && (
+        <Popup
+          message={popupMessage}
+          onClose={() => setShowPopup(false)}
+          show={showPopup}
+        />
       )}
     </div>
   );

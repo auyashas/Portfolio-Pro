@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Eye } from "lucide-react"; // Eye icon from lucide-react
+import Popup from "../components/Popup";
+import ConfirmPopup from "../components/ConfirmPopup"; // Import ConfirmPopup
 import "../styles/Applications.css";
 
 const Applications = () => {
@@ -9,6 +11,11 @@ const Applications = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [processing, setProcessing] = useState(false);
+    const [showPopup, setShowPopup] = useState(false); // State to control the popup
+    const [showConfirmPopup, setShowConfirmPopup] = useState(false); // State to control confirm popup
+    const [message, setMessage] = useState('');
+    const [currentAction, setCurrentAction] = useState('');
+    const [currentId, setCurrentId] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -27,31 +34,41 @@ const Applications = () => {
     }, []);
 
     const handleApprove = async (id) => {
+        setShowConfirmPopup(true);
+        setCurrentAction('approve');
+        setCurrentId(id);
+    };
+
+    const handleReject = async (id) => {
+        setShowConfirmPopup(true);
+        setCurrentAction('reject');
+        setCurrentId(id);
+    };
+
+    const confirmAction = async () => {
         setProcessing(true);
         try {
-            await axios.post(`http://localhost:3000/admin/application/${id}`, { status: 'approve' });
-            alert("Freelancer approved!");
-            window.location.reload();
+            await axios.post(`http://localhost:3000/admin/application/${currentId}`, { status: currentAction });
+            setMessage(`Freelancer ${currentAction}d!`);
+            setShowPopup(true);
+            setShowConfirmPopup(false);
+            setApplications((prevApps) =>
+                prevApps.map((app) =>
+                    app.freelancer_id === currentId ? { ...app, status: currentAction.charAt(0).toUpperCase() + currentAction.slice(1) } : app
+                )
+            );
         } catch (error) {
-            console.error("Error approving freelancer:", error);
-            alert("Failed to approve freelancer.");
+            console.error("Error performing action:", error);
+            setMessage(`Failed to ${currentAction} freelancer.`);
+            setShowPopup(true);
+            setShowConfirmPopup(false);
         } finally {
             setProcessing(false);
         }
     };
 
-    const handleReject = async (id) => {
-        setProcessing(true);
-        try {
-            await axios.post(`http://localhost:3000/admin/application/${id}`, { status: 'reject' });
-            alert("Freelancer rejected.");
-            window.location.reload();
-        } catch (error) {
-            console.error("Error rejecting freelancer:", error);
-            alert("Failed to reject freelancer.");
-        } finally {
-            setProcessing(false);
-        }
+    const cancelAction = () => {
+        setShowConfirmPopup(false);
     };
 
     if (loading) return <p>Loading applications...</p>;
@@ -75,7 +92,7 @@ const Applications = () => {
                             <th>Skills</th>
                             <th>Experience</th>
                             <th>Resume</th>
-                            <th>Profile</th> {/* 👁️ New Column */}
+                            <th>Profile</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -132,6 +149,18 @@ const Applications = () => {
                         ))}
                     </tbody>
                 </table>
+            )}
+
+            {showPopup && (
+                <Popup message={message} onClose={() => setShowPopup(false)} />
+            )}
+
+            {showConfirmPopup && (
+                <ConfirmPopup
+                    message={`Are you sure you want to ${currentAction} this freelancer?`}
+                    onConfirm={confirmAction}
+                    onCancel={cancelAction}
+                />
             )}
         </div>
     );

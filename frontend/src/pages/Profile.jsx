@@ -2,12 +2,17 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/Profile.css";
+import Popup from "../components/Popup";
+import ConfirmPopup from "../components/ConfirmPopup";
 
 const Profile = () => {
   const { id } = useParams();
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [updatedProfile, setUpdatedProfile] = useState({});
+  const [popupMessage, setPopupMessage] = useState("");
+  const [showPopup, setShowPopup] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const hasCheckedProfile = useRef(false);
   const navigate = useNavigate();
 
@@ -19,8 +24,9 @@ const Profile = () => {
       try {
         const response = await axios.get(`http://localhost:3000/freelancer/check/${id}`);
         if (!response.data.exists) {
-          alert("Please complete your profile to continue.");
-          navigate(`/freelancer/${id}/freelancer-application`);
+          setPopupMessage("Please complete your profile to continue.");
+          setShowPopup(true);
+          setTimeout(() => navigate(`/freelancer/${id}/freelancer-application`), 2000);
         }
       } catch (error) {
         console.error("Error checking freelancer profile:", error);
@@ -39,17 +45,22 @@ const Profile = () => {
 
     checkProfile();
     fetchProfile();
-  }, [id]);
+  }, [id, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setUpdatedProfile((prev) => ({ ...prev, [name]: value }));
   };
 
+  const confirmProfileUpdate = () => {
+    setShowConfirm(true);
+  };
+
   const handleProfileUpdate = async () => {
     try {
       const res = await axios.put(`http://localhost:3000/profile/${id}/update`, updatedProfile);
-      alert(res.data.message);
+      setPopupMessage(res.data.message);
+      setShowPopup(true);
       setIsEditing(false);
       setProfile(updatedProfile);
     } catch (err) {
@@ -106,7 +117,7 @@ const Profile = () => {
                       )}
                     </div>
                   ))}
-                  <button className="save-btn" onClick={handleProfileUpdate}>Save Changes</button>
+                  <button className="save-btn" onClick={confirmProfileUpdate}>Save Changes</button>
                 </div>
               ) : (
                 <>
@@ -149,8 +160,25 @@ const Profile = () => {
             </div>
           </div>
         </div>
-
       </div>
+
+      {showPopup && (
+        <Popup
+          message={popupMessage}
+          onClose={() => setShowPopup(false)}
+        />
+      )}
+
+      {showConfirm && (
+        <ConfirmPopup
+          message="Are you sure you want to save the changes?"
+          onConfirm={() => {
+            setShowConfirm(false);
+            handleProfileUpdate();
+          }}
+          onCancel={() => setShowConfirm(false)}
+        />
+      )}
     </div>
   );
 };
