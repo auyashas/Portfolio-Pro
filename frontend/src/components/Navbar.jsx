@@ -1,22 +1,32 @@
+import { useState } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useSession } from "../hooks/useSession"; // ✅ cookie-based session
+import ConfirmPopup from "../components/ConfirmPopup"; // Corrected import to use ConfirmPopup
 import "./Navbar.css";
 
 export default function Navbar() {
     const navigate = useNavigate();
     const location = useLocation();
     const { logout, user } = useSession();  // ← get user too
+    const [showConfirmPopup, setShowConfirmPopup] = useState(false);
 
     // Determine role based on the current URL path
     const role = location.pathname.includes('/admin') ? 'admin' :
                  location.pathname.includes('/freelancer') ? 'freelancer' :
                  location.pathname.includes('/client') ? 'client' : null;
 
-    const handleLogout = async () => {
-        const confirmLogout = window.confirm("Are you sure you want to log out?");
-        if (confirmLogout) {
+    const handleLogout = () => {
+        setShowConfirmPopup(true);  // Show confirmation popup
+    };
+
+    const confirmLogout = async () => {
+        try {
             await logout();
+            setShowConfirmPopup(false); // Close the confirm popup
             navigate("/"); // Redirect to home page after logout
+        } catch (error) {
+            console.error("Error during logout:", error);
+            // Optionally, handle any error message
         }
     };
 
@@ -84,7 +94,7 @@ export default function Navbar() {
             <ul className="nav-options">
                 <NavLink to={getHomeLink()}>Home</NavLink>
                 <NavLink to={getAboutLink()}>About Us</NavLink>
-                
+
                 {/* Show the login/signup options if no role is assigned */}
                 {role === null && (
                     <>
@@ -100,6 +110,15 @@ export default function Navbar() {
                     </div>
                 )}
             </ul>
+
+            {/* ConfirmPopup for confirmation on logout */}
+            {showConfirmPopup && (
+                <ConfirmPopup 
+                    message="Are you sure you want to log out?"
+                    onConfirm={confirmLogout}
+                    onCancel={() => setShowConfirmPopup(false)} 
+                />
+            )}
         </nav>
     );
 }
