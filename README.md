@@ -82,7 +82,7 @@
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/portfolio-pro.git
+git clone https://github.com/auyashas/portfolio-pro.git
 cd portfolio-pro
 ```
 
