@@ -6,36 +6,38 @@
 
 ## 🔧 Tech Stack
 
-- **Frontend:** React.js (Vite)
-- **Backend:** Node.js + Express
-- **Database:** MySQL
-- **Tools Used:** VS Code, Nodemon
+* **Frontend:** React.js (Vite)
+* **Backend:** Node.js + Express
+* **Database:** MySQL
+* **Tools Used:** VS Code, Nodemon
 
 ---
 
 ## 📌 Features
 
 ### 👤 Freelancer Module
-- Register with personal details, skills, and resume upload
-- Login after admin approval
-- Update personal details from profile section
+
+* Register with personal details, skills, and resume upload
+* Login after admin approval
+* Update personal details from profile section
 
 ### 🔐 Admin Module
-- Secure login
-- View, approve, or reject freelancer applications
-- View/download resumes of applicants
-- Job management
+
+* Secure login
+* View, approve, or reject freelancer applications
+* View/download resumes of applicants
+* Job management
 
 ### 👁️ Client Module
-- View list of approved freelancers
-- Download resumes
-- Access freelancer contact info directly
-- Hire freelancers
+
+* View list of approved freelancers
+* Download resumes
+* Access freelancer contact info directly
+* Hire freelancers
 
 ---
 
 ## 🗂️ Project Structure
-
 
 ```
 /backend → Node.js backend
@@ -91,7 +93,7 @@ cd portfolio-pro
 ```bash
 cd backend
 npm install
-npm run dev
+node server.js
 ```
 
 ### 3. Setup Frontend
@@ -104,9 +106,9 @@ npm run dev
 
 ### 4. Setup Database
 
-- Open MySQL or phpMyAdmin
-- Import the SQL schema (based on structure below)
-- Update `.env` file with your database credentials
+* Open MySQL or phpMyAdmin
+* Import the SQL schema (based on structure below)
+* Update `.env` file with your database credentials
 
 ---
 
@@ -126,65 +128,77 @@ Tables:
 ---
 
 ### 🔹 `users`
+
 Stores credentials and personal details for all users (freelancers, clients, and admin).
 
-| Column      | Type                            | Description                     |
-|-------------|----------------------------------|---------------------------------|
-| id          | int(11), PK, AUTO_INCREMENT     | Unique user ID                  |
-| email       | varchar(255), UNIQUE            | User login email                |
-| password    | varchar(255)                    | Hashed password                 |
-| first_name  | varchar(100)                    | First name                      |
-| last_name   | varchar(100)                    | Last name                       |
-| contact     | varchar(20)                     | Contact number                  |
-| city        | varchar(100) (nullable)         | City                            |
-| country     | varchar(100) (nullable)         | Country                         |
-| role        | enum('freelancer','client','admin') | Role of the user           |
-| created_at  | timestamp DEFAULT CURRENT_TIMESTAMP | Created time               |
+```sql
+CREATE TABLE users (
+    id INT(11) AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    contact VARCHAR(20) NOT NULL,
+    city VARCHAR(100),
+    country VARCHAR(100),
+    role ENUM('freelancer','client','admin') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
 
 ---
 
 ### 🔹 `freelancer`
+
 Stores freelancer-specific profile data.
 
-| Column           | Type                            | Description                      |
-|------------------|----------------------------------|----------------------------------|
-| id               | int(11), PK, AUTO_INCREMENT     | Unique freelancer ID             |
-| user_id          | int(11), FK                     | Refers to `users.id`             |
-| title            | varchar(100)                    | Professional headline            |
-| bio              | text                            | Short bio                        |
-| skills           | text                            | Skillset                         |
-| experience       | varchar(100)                    | Experience info                  |
-| resume_path      | varchar(255)                    | Uploaded resume path             |
-| profile_pic_path | varchar(255)                    | Uploaded profile picture path    |
-| social_links     | text                            | Portfolio or LinkedIn URL(s)     |
-| status           | enum('Pending','Approved','Rejected') | Admin approval status     |
-| created_at       | timestamp DEFAULT CURRENT_TIMESTAMP | Created time               |
+```sql
+CREATE TABLE freelancer (
+    id INT(11) AUTO_INCREMENT PRIMARY KEY,
+    user_id INT(11) NOT NULL,
+    title VARCHAR(100),
+    bio TEXT,
+    skills TEXT,
+    experience VARCHAR(100),
+    resume_path VARCHAR(255),
+    profile_pic_path VARCHAR(255),
+    social_links TEXT,
+    status ENUM('Pending','Approved','Rejected') DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+```
 
 ---
 
 ### 🔹 `jobs`
+
 Stores job requests submitted by clients for freelancers.
 
-| Column         | Type                            | Description                      |
-|----------------|----------------------------------|----------------------------------|
-| id             | int(11), PK, AUTO_INCREMENT     | Unique job ID                    |
-| freelancer_id  | int(11), FK                     | Refers to `freelancer.id`        |
-| job_title      | varchar(255)                    | Job/project title                |
-| description    | text                            | Detailed job description         |
-| client_id      | int(11), FK                     | Refers to `users.id`             |
-| client_name    | varchar(255)                    | Client name                      |
-| client_email   | varchar(255)                    | Client email                     |
-| client_contact | varchar(20)                     | Client phone number              |
-| status         | enum('Pending','Approved','Rejected') | Status of the job         |
-| created_at     | timestamp DEFAULT CURRENT_TIMESTAMP | Created time               |
+```sql
+CREATE TABLE jobs (
+    id INT(11) AUTO_INCREMENT PRIMARY KEY,
+    freelancer_id INT(11) NOT NULL,
+    job_title VARCHAR(255) NOT NULL,
+    description TEXT,
+    client_id INT(11) NOT NULL,
+    client_name VARCHAR(255) NOT NULL,
+    client_email VARCHAR(255) NOT NULL,
+    client_contact VARCHAR(20) NOT NULL,
+    status ENUM('Pending','Approved','Rejected') DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (freelancer_id) REFERENCES freelancer(id) ON DELETE CASCADE,
+    FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE
+);
+```
 
 ---
 
 ## 👨‍💻 Developed By
 
-- A.U Yashas  
-- Preetham  
-- Harshith R Shetty
+* A.U Yashas
+* Preetham
+* Harshith R Shetty
 
 ---
 
